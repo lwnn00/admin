@@ -737,7 +737,7 @@
                 }
             })(),
             
-            // 管理员 API 端点映射
+            // 管理员 API 端点映射（已修复）
             ADMIN_ENDPOINTS: {
                 // 认证相关
                 login: '/api/login',
@@ -758,11 +758,12 @@
                 generateCodes: '/api/admin/generate-codes',
                 validateCode: '/api/validate-code',
                 
-                // 申请管理
-                applications: '/api/invitation-applications',
+                // 申请管理（已修复端点路径）
+                applications: '/api/admin/applications/all',
                 pendingApplications: '/api/admin/applications/pending',
                 applicationReview: (applicationId) => `/api/admin/applications/${applicationId}/review`,
                 batchAction: '/api/admin/applications/batch-action',
+                applicationDetail: (applicationId) => `/api/invitation/check/${applicationId}`,
                 
                 // 记录管理
                 records: '/api/admin/records',
@@ -925,13 +926,21 @@
             },
             
             async getApplicationDetail(applicationId) {
-                return this.request(`/api/invitation/check/${applicationId}`);
+                return this.request(CONFIG.ADMIN_ENDPOINTS.applicationDetail(applicationId));
             },
             
             async reviewApplication(applicationId, action, notes) {
                 return this.request(CONFIG.ADMIN_ENDPOINTS.applicationReview(applicationId), 'POST', {
                     action,
-                    reviewNotes: notes
+                    review_notes: notes
+                });
+            },
+            
+            async batchActionApplications(applicationIds, action, notes) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.batchAction, 'POST', {
+                    applicationIds,
+                    action,
+                    review_notes: notes
                 });
             },
             
@@ -1581,7 +1590,7 @@
                 
                 tbody.innerHTML = applications.map(app => `
                     <tr>
-                        <td><code>${app.application_id}</code></td>
+                        <td><code>${app.id}</code></td>
                         <td><strong>${app.username}</strong></td>
                         <td>${app.email || '-'}</td>
                         <td>${app.purpose}</td>
@@ -1597,18 +1606,18 @@
                         <td>
                             ${app.status === 'pending' ? `
                                 <button class="btn btn-sm btn-success action-btn" 
-                                        onclick="AdminUI.reviewApplication('${app.application_id}', 'approve')"
+                                        onclick="AdminUI.reviewApplication('${app.id}', 'approve')"
                                         title="批准">
                                     <i class="bi bi-check-lg"></i>
                                 </button>
                                 <button class="btn btn-sm btn-danger action-btn" 
-                                        onclick="AdminUI.reviewApplication('${app.application_id}', 'reject')"
+                                        onclick="AdminUI.reviewApplication('${app.id}', 'reject')"
                                         title="拒绝">
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             ` : ''}
                             <button class="btn btn-sm btn-info action-btn" title="查看详情"
-                                    onclick="AdminUI.showApplicationDetail('${app.application_id}')">
+                                    onclick="AdminUI.showApplicationDetail('${app.id}')">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </td>
