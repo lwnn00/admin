@@ -239,11 +239,86 @@
                 padding: 30px 20px;
             }
         }
+        
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        /* 数据表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* 搜索框样式 */
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box .form-control {
+            padding-left: 40px;
+        }
+        
+        .search-box .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        /* 分页样式 */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dee2e6;
+        }
+        
+        /* 加载动画 */
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+        
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <!-- 登录页面 -->
-    <div id="loginPage">
+    <div id="loginPage" style="display: none;">
         <div class="login-container">
             <div class="login-header">
                 <h2>足球盘口管理系统</h2>
@@ -251,10 +326,6 @@
             </div>
             
             <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
-            
-            <div id="connectionStatus" class="alert alert-info d-none" role="alert">
-                正在检查API连接...
-            </div>
             
             <form id="loginForm">
                 <div class="mb-3">
@@ -269,20 +340,8 @@
                            placeholder="请输入密码" required>
                 </div>
                 
-                <div class="mb-3">
-                    <label for="apiUrl" class="form-label">API服务器地址</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="apiUrl" 
-                               placeholder="例如: https://footballdream.vercel.app">
-                        <button class="btn btn-outline-secondary" type="button" id="testApiBtn">
-                            <i class="bi bi-plug"></i>
-                        </button>
-                    </div>
-                    <div class="form-text">如果API服务器不是默认地址，请在此修改</div>
-                </div>
-                
                 <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="rememberMe" checked>
+                    <input type="checkbox" class="form-check-input" id="rememberMe">
                     <label class="form-check-label" for="rememberMe">记住我</label>
                 </div>
                 
@@ -301,7 +360,7 @@
     </div>
     
     <!-- 管理后台 -->
-    <div id="adminDashboard" class="d-none">
+    <div id="adminDashboard" style="display: none;">
         <!-- 顶部导航栏 -->
         <nav class="navbar navbar-admin navbar-expand-lg">
             <div class="container-fluid">
@@ -311,11 +370,6 @@
                 </a>
                 
                 <div class="navbar-nav ms-auto">
-                    <div class="nav-item me-3">
-                        <small class="text-white">
-                            API: <span id="currentApiUrl" class="badge bg-light text-dark"></span>
-                        </small>
-                    </div>
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" 
                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -377,15 +431,21 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="#" data-section="statistics">
+                                    <i class="bi bi-bar-chart"></i>
+                                    统计分析
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="#" data-section="logs">
                                     <i class="bi bi-journal-text"></i>
                                     操作日志
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-section="tools">
-                                    <i class="bi bi-tools"></i>
-                                    系统工具
+                            <li class="nav-item mt-4">
+                                <a class="nav-link" href="#" data-section="settings">
+                                    <i class="bi bi-shield-check"></i>
+                                    系统安全
                                 </a>
                             </li>
                         </ul>
@@ -399,14 +459,9 @@
                         <div id="dashboardSection" class="content-section">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h4><i class="bi bi-speedometer2 me-2"></i>系统概览</h4>
-                                <div>
-                                    <button class="btn btn-sm btn-outline-info me-2" id="apiStatusBtn">
-                                        <i class="bi bi-plug"></i> API状态
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-primary" id="refreshStats">
-                                        <i class="bi bi-arrow-clockwise"></i> 刷新
-                                    </button>
-                                </div>
+                                <button class="btn btn-sm btn-outline-primary" id="refreshStats">
+                                    <i class="bi bi-arrow-clockwise"></i> 刷新
+                                </button>
                             </div>
                             
                             <!-- 统计卡片 -->
@@ -475,9 +530,9 @@
                                             </button>
                                         </div>
                                         <div class="col-md-3 col-6 mb-3">
-                                            <button class="btn btn-outline-warning w-100" id="systemToolsBtn">
-                                                <i class="bi bi-tools me-2"></i>
-                                                系统工具
+                                            <button class="btn btn-outline-warning w-100" id="systemLogsBtn">
+                                                <i class="bi bi-list-check me-2"></i>
+                                                系统日志
                                             </button>
                                         </div>
                                     </div>
@@ -503,7 +558,7 @@
                         </div>
                         
                         <!-- 用户管理 -->
-                        <div id="usersSection" class="content-section d-none">
+                        <div id="usersSection" class="content-section" style="display: none;">
                             <h4 class="mb-4"><i class="bi bi-people me-2"></i>用户管理</h4>
                             <div id="usersContent">
                                 <!-- 用户管理内容将通过JavaScript动态加载 -->
@@ -511,7 +566,7 @@
                         </div>
                         
                         <!-- 邀请码管理 -->
-                        <div id="invitationsSection" class="content-section d-none">
+                        <div id="invitationsSection" class="content-section" style="display: none;">
                             <h4 class="mb-4"><i class="bi bi-ticket-perforated me-2"></i>邀请码管理</h4>
                             <div id="invitationsContent">
                                 <!-- 邀请码管理内容将通过JavaScript动态加载 -->
@@ -519,7 +574,7 @@
                         </div>
                         
                         <!-- 申请管理 -->
-                        <div id="applicationsSection" class="content-section d-none">
+                        <div id="applicationsSection" class="content-section" style="display: none;">
                             <h4 class="mb-4"><i class="bi bi-file-earmark-text me-2"></i>申请管理</h4>
                             <div id="applicationsContent">
                                 <!-- 申请管理内容将通过JavaScript动态加载 -->
@@ -527,26 +582,34 @@
                         </div>
                         
                         <!-- 记录管理 -->
-                        <div id="recordsSection" class="content-section d-none">
+                        <div id="recordsSection" class="content-section" style="display: none;">
                             <h4 class="mb-4"><i class="bi bi-clipboard-data me-2"></i>记录管理</h4>
                             <div id="recordsContent">
                                 <!-- 记录管理内容将通过JavaScript动态加载 -->
                             </div>
                         </div>
                         
+                        <!-- 统计分析 -->
+                        <div id="statisticsSection" class="content-section" style="display: none;">
+                            <h4 class="mb-4"><i class="bi bi-bar-chart me-2"></i>统计分析</h4>
+                            <div id="statisticsContent">
+                                <!-- 统计分析内容将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+                        
                         <!-- 操作日志 -->
-                        <div id="logsSection" class="content-section d-none">
+                        <div id="logsSection" class="content-section" style="display: none;">
                             <h4 class="mb-4"><i class="bi bi-journal-text me-2"></i>操作日志</h4>
                             <div id="logsContent">
                                 <!-- 日志内容将通过JavaScript动态加载 -->
                             </div>
                         </div>
                         
-                        <!-- 系统工具 -->
-                        <div id="toolsSection" class="content-section d-none">
-                            <h4 class="mb-4"><i class="bi bi-tools me-2"></i>系统工具</h4>
-                            <div id="toolsContent">
-                                <!-- 工具内容将通过JavaScript动态加载 -->
+                        <!-- 系统安全 -->
+                        <div id="settingsSection" class="content-section" style="display: none;">
+                            <h4 class="mb-4"><i class="bi bi-shield-check me-2"></i>系统安全设置</h4>
+                            <div id="settingsContent">
+                                <!-- 系统设置内容将通过JavaScript动态加载 -->
                             </div>
                         </div>
                     </div>
@@ -596,31 +659,40 @@
         </div>
     </div>
 
-    <!-- API配置模态框 -->
-    <div class="modal fade" id="apiConfigModal" tabindex="-1">
+    <!-- 用户详情模态框 -->
+    <div class="modal fade" id="userDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">用户详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="userDetailContent">
+                    <!-- 用户详情内容将通过JavaScript动态加载 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn">保存更改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 申请详情模态框 -->
+    <div class="modal fade" id="applicationDetailModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">API服务器配置</h5>
+                    <h5 class="modal-title">申请详情</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="apiConfigForm">
-                        <div class="mb-3">
-                            <label for="configApiUrl" class="form-label">API服务器地址</label>
-                            <input type="text" class="form-control" id="configApiUrl" 
-                                   placeholder="例如: https://footballdream.vercel.app">
-                            <div class="form-text">请填写完整的API服务器URL（包括http://或https://）</div>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i>
-                            当前API地址: <span id="currentApiDisplay" class="fw-bold"></span>
-                        </div>
-                    </form>
+                <div class="modal-body" id="applicationDetailContent">
+                    <!-- 申请详情内容将通过JavaScript动态加载 -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="saveApiConfigBtn">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-success" id="approveApplicationBtn">批准</button>
+                    <button type="button" class="btn btn-danger" id="rejectApplicationBtn">拒绝</button>
                 </div>
             </div>
         </div>
@@ -635,98 +707,95 @@
         </div>
     </div>
 
+    <!-- Toast消息提示 -->
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 10000;">
+        <!-- Toast消息将在这里动态添加 -->
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // ==================== 全局配置 ====================
-        const AppConfig = {
-            // 默认API地址（可以根据部署环境修改）
-            DEFAULT_API_URL: 'https://footballdream.vercel.app',
-            
-            // 本地开发环境的API地址
-            LOCAL_API_URL: 'http://localhost:3000',
-             // 获取当前API地址
-    getApiUrl() {
-        // 优先使用本地存储的配置
-        const savedUrl = localStorage.getItem('admin_api_url');
-        if (savedUrl) return savedUrl;
-        
-        // 检查当前页面是否是本地开发
-        const isLocal = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname === '';
-        
-        // 如果是本地开发，使用本地API，否则使用生产API
-        return isLocal ? this.LOCAL_API_URL : this.DEFAULT_API_URL;
-    },
-            // API端点配置
-            ENDPOINTS: {
-                // 公共端点
-                test: '/api/test',
-                login: '/api/login',
-                validateCode: '/api/validate-code',
-                checkTables: '/api/check-tables',
-                invitationCodes: '/api/invitation-codes',
-                invitationApply: '/api/invitation/apply',
-                invitationCheck: '/api/invitation/check/:id',
-                
-                // 管理员端点
-                adminStats: '/api/admin/stats',
-                adminUsers: '/api/admin/users',
-                adminUserUpdate: '/api/admin/users/:id',
-                adminUserDelete: '/api/admin/users/:id',
-                adminApplications: '/api/admin/applications',
-                adminReviewApplication: '/api/admin/applications/:id/review',
-                adminGenerateCodes: '/api/admin/generate-codes',
-                adminInvitationStats: '/api/admin/invitation-stats',
-                adminExport: '/api/admin/export/:type',
-                adminLogs: '/api/admin/logs',
-                adminClearLogs: '/api/admin/logs',
-                adminRepairTables: '/api/admin/repair-tables',
-                
-                // 用户端点
-                userInfo: '/api/user/info',
-                userHistory: '/api/history',
-                userRecords: '/api/records',
-                userStats: '/api/stats',
-                userSync: '/api/sync'
-            },
-            
-            // 获取当前API地址
-            getApiUrl() {
-                // 优先使用本地存储的配置
-                const savedUrl = localStorage.getItem('admin_api_url');
-                if (savedUrl) return savedUrl;
-                
-                // 开发环境使用本地API
+        const CONFIG = {
+            // 根据环境自动设置 API 基础 URL
+            API_BASE_URL: (function() {
+                // 如果当前是本地开发环境
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    return this.LOCAL_API_URL;
+                    return 'http://localhost:3000';
                 }
+                // 如果是 Vercel 部署的管理后台
+                else if (window.location.hostname.includes('vercel.app')) {
+                    return 'https://footballdream.vercel.app';
+                }
+                // 如果是 GitHub Pages 部署的管理后台
+                else if (window.location.hostname.includes('github.io')) {
+                    return 'https://footballdream.vercel.app';
+                }
+                // 默认回退
+                else {
+                    return 'https://footballdream.vercel.app';
+                }
+            })(),
+            
+            // 管理员 API 端点映射
+            ADMIN_ENDPOINTS: {
+                // 认证相关
+                login: '/api/login',
+                logout: '/api/logout',
                 
-                // 生产环境使用默认API
-                return this.DEFAULT_API_URL;
+                // 用户管理
+                users: '/api/admin/users',
+                userDetail: (userId) => `/api/admin/users/${userId}`,
+                
+                // 统计信息
+                stats: '/api/admin/stats',
+                invitationStats: '/api/invitation-stats',
+                applicationStats: '/api/admin/applications/stats',
+                
+                // 邀请码管理
+                invitations: '/api/admin/invitations',
+                invitationDetail: (codeId) => `/api/admin/invitations/${codeId}`,
+                generateCodes: '/api/admin/generate-codes',
+                validateCode: '/api/validate-code',
+                
+                // 申请管理
+                applications: '/api/invitation-applications',
+                pendingApplications: '/api/admin/applications/pending',
+                applicationReview: (applicationId) => `/api/admin/applications/${applicationId}/review`,
+                batchAction: '/api/admin/applications/batch-action',
+                
+                // 记录管理
+                records: '/api/admin/records',
+                
+                // 日志管理
+                logs: '/api/admin/logs',
+                
+                // 系统设置
+                settings: '/api/admin/settings',
+                
+                // 表修复
+                repairTables: '/api/admin/repair-tables',
+                
+                // 测试端点
+                test: '/api/test',
+                checkTables: '/api/check-tables',
+                authStatus: '/api/auth/status'
             },
             
-            // 保存API地址
-            setApiUrl(url) {
-                // 确保URL格式正确
-                let apiUrl = url.trim();
-                if (apiUrl && !apiUrl.startsWith('http')) {
-                    apiUrl = 'https://' + apiUrl;
-                }
-                localStorage.setItem('admin_api_url', apiUrl);
-                return apiUrl;
+            // 页面配置
+            PAGE_CONFIG: {
+                usersPerPage: 20,
+                applicationsPerPage: 20,
+                recordsPerPage: 20,
+                logsPerPage: 50,
+                defaultDateRange: 30 // 天
             },
             
-            // 获取完整的API路径
-            getApiPath(endpoint, params = {}) {
-                let path = endpoint;
-                
-                // 替换路径参数
-                Object.keys(params).forEach(key => {
-                    path = path.replace(`:${key}`, params[key]);
-                });
-                
-                return `${this.getApiUrl()}${path}`;
+            // 系统信息
+            SYSTEM_INFO: {
+                name: '足球盘口管理系统',
+                version: '1.0.0',
+                adminEmail: 'admin@footballbetting.com'
             }
         };
 
@@ -745,7 +814,6 @@
                         this.adminInfo = JSON.parse(savedAdmin);
                         this.isAuthenticated = true;
                     } catch (e) {
-                        console.error('解析管理员信息失败:', e);
                         this.clearAuth();
                     }
                 }
@@ -772,297 +840,210 @@
             },
             
             getAuthHeader() {
-                const headers = {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                return {
+                    'Authorization': `Bearer ${this.authToken}`,
+                    'Content-Type': 'application/json'
                 };
-                
-                if (this.authToken) {
-                    headers['Authorization'] = `Bearer ${this.authToken}`;
-                }
-                
-                return headers;
             }
         };
 
         // ==================== API服务 ====================
         const AdminAPI = {
-            async request(endpoint, method = 'GET', data = null, params = {}) {
-                const url = AppConfig.getApiPath(endpoint, params);
+            async request(endpoint, method = 'GET', data = null) {
+                const url = endpoint.startsWith('http') ? endpoint : `${CONFIG.API_BASE_URL}${endpoint}`;
                 const options = {
                     method,
                     headers: AdminState.getAuthHeader(),
-                    mode: 'cors',
-                    credentials: 'omit' // 如果API服务器需要cookie，可以改为'include'
+                    body: data ? JSON.stringify(data) : null
                 };
-                
-                if (data) {
-                    options.body = JSON.stringify(data);
-                }
                 
                 try {
                     console.log(`API请求: ${method} ${url}`, data);
-                    
                     const response = await fetch(url, options);
                     
-                    // 处理认证错误
                     if (response.status === 401 || response.status === 403) {
+                        // 认证失败，清除状态
                         AdminState.clearAuth();
                         AdminUI.showLoginPage();
-                        AdminUI.showAlert('认证已失效，请重新登录', 'warning');
-                        throw new Error('认证失效');
+                        AdminUI.showToast('认证失效，请重新登录', 'warning');
+                        throw new Error('认证失效，请重新登录');
                     }
                     
-                    // 检查响应状态
                     if (!response.ok) {
-                        let errorMsg = `HTTP ${response.status}`;
-                        try {
-                            const errorData = await response.json();
-                            errorMsg = errorData.error || errorMsg;
-                        } catch (e) {
-                            // 忽略解析错误
-                        }
-                        throw new Error(errorMsg);
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
                     }
                     
-                    // 解析响应数据
-                    const result = await response.json();
-                    
-                    // 检查API响应格式
-                    if (result && typeof result === 'object') {
-                        return result;
-                    } else {
-                        throw new Error('API响应格式错误');
-                    }
-                    
+                    return await response.json();
                 } catch (error) {
                     console.error('API请求失败:', error);
-                    
-                    // 如果是网络错误，显示连接问题
-                    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                        AdminUI.showAlert('无法连接到API服务器，请检查网络连接或API地址', 'danger');
-                    } else {
-                        AdminUI.showAlert(`请求失败: ${error.message}`, 'danger');
-                    }
-                    
                     throw error;
                 }
             },
             
-            // 测试API连接
-            async testConnection() {
-                try {
-                    const response = await fetch(AppConfig.getApiPath(AppConfig.ENDPOINTS.test), {
-                        method: 'GET',
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    const result = await response.json();
-                    return {
-                        success: result.success === true,
-                        message: result.message || 'API连接正常',
-                        timestamp: result.timestamp
-                    };
-                } catch (error) {
-                    console.error('API连接测试失败:', error);
-                    return {
-                        success: false,
-                        message: `连接失败: ${error.message}`,
-                        error: error
-                    };
-                }
-            },
-            
-            // 管理员登录
             async login(username, password) {
-                const result = await this.request(AppConfig.ENDPOINTS.login, 'POST', {
-                    username,
-                    password
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
                 });
+                
+                const result = await response.json();
                 
                 if (result.success && result.user.userType === 'admin') {
                     AdminState.saveAuth(result.token, result.user);
-                    return { 
-                        success: true, 
-                        user: result.user,
-                        token: result.token
-                    };
+                    return { success: true, user: result.user };
                 } else if (result.success && result.user.userType !== 'admin') {
-                    return { 
-                        success: false, 
-                        error: '此账户不是管理员账户' 
-                    };
+                    return { success: false, error: '非管理员账户' };
                 } else {
-                    return { 
-                        success: false, 
-                        error: result.error || '登录失败' 
-                    };
+                    return { success: false, error: result.error || '登录失败' };
                 }
             },
             
-            // 获取统计信息
             async getStats() {
-                return this.request(AppConfig.ENDPOINTS.adminStats);
+                return this.request(CONFIG.ADMIN_ENDPOINTS.stats);
             },
             
-            // 获取用户列表
-            async getUsers(page = 1, limit = 20, search = '', userType = '') {
-                let query = `?page=${page}&limit=${limit}`;
-                if (search) query += `&search=${encodeURIComponent(search)}`;
-                if (userType) query += `&user_type=${userType}`;
-                
-                return this.request(AppConfig.ENDPOINTS.adminUsers + query);
+            async getUsers(page = 1, limit = 20, search = '') {
+                return this.request(`${CONFIG.ADMIN_ENDPOINTS.users}?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
             },
             
-            // 获取申请列表
+            async getUserDetail(userId) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.userDetail(userId));
+            },
+            
+            async updateUser(userId, data) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.userDetail(userId), 'PUT', data);
+            },
+            
+            async deleteUser(userId) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.userDetail(userId), 'DELETE');
+            },
+            
             async getApplications(status = 'pending', page = 1, limit = 20) {
-                return this.request(`${AppConfig.ENDPOINTS.adminApplications}?status=${status}&page=${page}&limit=${limit}`);
+                return this.request(`${CONFIG.ADMIN_ENDPOINTS.applications}?status=${status}&page=${page}&limit=${limit}`);
             },
             
-            // 审核申请
-            async reviewApplication(applicationId, action, reviewNotes = '') {
-                return this.request(
-                    AppConfig.ENDPOINTS.adminReviewApplication.replace(':id', applicationId),
-                    'POST',
-                    {
-                        action,
-                        review_notes: reviewNotes
-                    }
-                );
+            async getApplicationDetail(applicationId) {
+                return this.request(`/api/invitation/check/${applicationId}`);
             },
             
-            // 生成邀请码
+            async reviewApplication(applicationId, action, notes) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.applicationReview(applicationId), 'POST', {
+                    action,
+                    reviewNotes: notes
+                });
+            },
+            
             async generateInvitationCodes(data) {
-                return this.request(AppConfig.ENDPOINTS.adminGenerateCodes, 'POST', data);
+                return this.request(CONFIG.ADMIN_ENDPOINTS.generateCodes, 'POST', data);
             },
             
-            // 获取操作日志
+            async getInvitations(page = 1, limit = 20, status = 'all') {
+                return this.request(`${CONFIG.ADMIN_ENDPOINTS.invitations}?page=${page}&limit=${limit}&status=${status}`);
+            },
+            
+            async getInvitationDetail(codeId) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.invitationDetail(codeId));
+            },
+            
+            async updateInvitation(codeId, data) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.invitationDetail(codeId), 'PUT', data);
+            },
+            
+            async deleteInvitation(codeId) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.invitationDetail(codeId), 'DELETE');
+            },
+            
+            async getRecords(page = 1, limit = 20, userId = null) {
+                let url = `${CONFIG.ADMIN_ENDPOINTS.records}?page=${page}&limit=${limit}`;
+                if (userId) url += `&userId=${userId}`;
+                return this.request(url);
+            },
+            
             async getLogs(page = 1, limit = 50) {
-                return this.request(`${AppConfig.ENDPOINTS.adminLogs}?page=${page}&limit=${limit}`);
+                return this.request(`${CONFIG.ADMIN_ENDPOINTS.logs}?page=${page}&limit=${limit}`);
             },
             
-            // 导出数据
-            async exportData(type, format = 'json') {
-                const endpoint = AppConfig.ENDPOINTS.adminExport.replace(':type', type);
-                return this.request(`${endpoint}?format=${format}`);
+            async getSettings() {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.settings);
             },
             
-            // 修复表结构
+            async updateSettings(data) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.settings, 'PUT', data);
+            },
+            
             async repairTables() {
-                return this.request(AppConfig.ENDPOINTS.adminRepairTables, 'POST');
-            },
-            
-            // 检查表结构
-            async checkTables() {
-                return this.request(AppConfig.ENDPOINTS.checkTables);
+                return this.request(CONFIG.ADMIN_ENDPOINTS.repairTables, 'POST');
             }
         };
 
         // ==================== UI控制 ====================
         const AdminUI = {
-            // 显示/隐藏加载遮罩
-            showLoading(text = '正在处理，请稍候...') {
-                let overlay = document.getElementById('loadingOverlay');
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = 'loadingOverlay';
-                    overlay.className = 'position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-none';
-                    overlay.style.zIndex = '9999';
-                    overlay.innerHTML = `
-                        <div class="position-absolute top-50 start-50 translate-middle text-center">
-                            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
-                            <p class="mt-3">${text}</p>
-                        </div>
-                    `;
-                    document.body.appendChild(overlay);
-                } else {
-                    const p = overlay.querySelector('p');
-                    if (p) p.textContent = text;
-                }
-                overlay.classList.remove('d-none');
+            showLoading() {
+                document.getElementById('loadingOverlay').classList.remove('d-none');
             },
             
             hideLoading() {
-                const overlay = document.getElementById('loadingOverlay');
-                if (overlay) overlay.classList.add('d-none');
+                document.getElementById('loadingOverlay').classList.add('d-none');
             },
             
-            // 显示/隐藏登录页面和管理面板
             showLoginPage() {
                 document.getElementById('loginPage').style.display = 'block';
                 document.getElementById('adminDashboard').style.display = 'none';
-                
-                // 显示当前API地址
-                const apiUrlInput = document.getElementById('apiUrl');
-                if (apiUrlInput) {
-                    apiUrlInput.value = AppConfig.getApiUrl();
-                }
             },
             
             showAdminDashboard() {
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('adminDashboard').style.display = 'block';
                 
-                // 显示当前管理员信息
                 if (AdminState.adminInfo) {
                     document.getElementById('currentAdminName').textContent = 
                         AdminState.adminInfo.username;
                 }
                 
-                // 显示当前API地址
-                document.getElementById('currentApiUrl').textContent = 
-                    AppConfig.getApiUrl().replace(/^https?:\/\//, '');
-                
-                // 初始化加载控制面板
+                // 加载控制面板
                 this.loadDashboard();
             },
             
-            // 显示消息提示
-            showAlert(message, type = 'danger', duration = 5000) {
-                // 创建消息容器（如果不存在）
-                let alertContainer = document.getElementById('alertContainer');
-                if (!alertContainer) {
-                    alertContainer = document.createElement('div');
-                    alertContainer.id = 'alertContainer';
-                    alertContainer.className = 'position-fixed top-0 start-50 translate-middle-x mt-3';
-                    alertContainer.style.zIndex = '9998';
-                    document.body.appendChild(alertContainer);
-                }
+            showAlert(message, type = 'danger') {
+                const alertDiv = document.getElementById('loginAlert');
+                alertDiv.textContent = message;
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.classList.remove('d-none');
                 
-                // 创建消息元素
-                const alertId = 'alert-' + Date.now();
-                const alertDiv = document.createElement('div');
-                alertDiv.id = alertId;
-                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-                alertDiv.style.minWidth = '300px';
-                alertDiv.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <i class="bi ${type === 'success' ? 'bi-check-circle' : 
-                                          type === 'warning' ? 'bi-exclamation-triangle' : 
-                                          type === 'info' ? 'bi-info-circle' : 'bi-exclamation-circle'} me-2"></i>
-                        <div class="flex-grow-1">${message}</div>
-                        <button type="button" class="btn-close ms-2" onclick="document.getElementById('${alertId}').remove()"></button>
+                // 3秒后自动隐藏
+                setTimeout(() => {
+                    alertDiv.classList.add('d-none');
+                }, 3000);
+            },
+            
+            showToast(message, type = 'info', duration = 3000) {
+                const toastContainer = document.getElementById('toastContainer');
+                const toastId = 'toast-' + Date.now();
+                
+                const toastHtml = `
+                    <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                ${message}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
                     </div>
                 `;
                 
-                alertContainer.appendChild(alertDiv);
+                toastContainer.insertAdjacentHTML('beforeend', toastHtml);
                 
-                // 自动消失
-                if (duration > 0) {
-                    setTimeout(() => {
-                        const alertEl = document.getElementById(alertId);
-                        if (alertEl) alertEl.remove();
-                    }, duration);
-                }
+                const toastElement = document.getElementById(toastId);
+                const toast = new bootstrap.Toast(toastElement, { delay: duration });
+                toast.show();
                 
-                return alertDiv;
+                toastElement.addEventListener('hidden.bs.toast', function () {
+                    toastElement.remove();
+                });
             },
             
-            // 显示不同部分的内容
             showSection(sectionId) {
                 // 隐藏所有内容区
                 document.querySelectorAll('.content-section').forEach(section => {
@@ -1090,102 +1071,137 @@
                 }
             },
             
-            // 加载控制面板
             async loadDashboard() {
                 try {
-                    // 先测试API连接
-                    const testResult = await AdminAPI.testConnection();
-                    if (!testResult.success) {
-                        this.showAlert(`API连接失败: ${testResult.message}`, 'warning');
-                        return;
-                    }
-                    
-                    // 加载统计信息
                     const stats = await AdminAPI.getStats();
                     if (stats.success) {
                         this.updateStats(stats.stats);
-                        this.updateRecentActivity(stats.stats.recent_activity);
-                    } else {
-                        this.showAlert('获取统计信息失败', 'danger');
+                        this.loadRecentActivity();
                     }
                 } catch (error) {
                     console.error('加载控制面板失败:', error);
-                    this.showAlert('加载失败: ' + error.message, 'danger');
+                    AdminUI.showToast('加载统计信息失败', 'danger');
                 }
             },
             
-            // 更新统计卡片
             updateStats(stats) {
-                if (!stats) return;
-                
-                // 更新用户统计
-                if (stats.users?.total !== undefined) {
-                    document.getElementById('totalUsers').textContent = stats.users.total;
+                if (stats.total_users) {
+                    document.getElementById('totalUsers').textContent = stats.total_users;
                 }
-                
-                // 更新邀请码统计
-                if (stats.invitations?.active !== undefined) {
-                    document.getElementById('activeInvites').textContent = stats.invitations.active;
+                if (stats.active_invites) {
+                    document.getElementById('activeInvites').textContent = stats.active_invites;
                 }
-                
-                // 更新申请统计
-                if (stats.applications?.pending !== undefined) {
-                    document.getElementById('pendingApps').textContent = stats.applications.pending;
+                if (stats.pending_apps) {
+                    document.getElementById('pendingApps').textContent = stats.pending_apps;
                     
                     // 更新侧边栏徽章
                     const badge = document.getElementById('pendingBadge');
-                    if (stats.applications.pending > 0) {
-                        badge.textContent = stats.applications.pending;
+                    if (stats.pending_apps > 0) {
+                        badge.textContent = stats.pending_apps;
                         badge.classList.remove('d-none');
                     } else {
                         badge.classList.add('d-none');
                     }
                 }
-                
-                // 更新记录统计
-                if (stats.records?.total !== undefined) {
-                    document.getElementById('totalRecords').textContent = stats.records.total;
+                if (stats.total_records) {
+                    document.getElementById('totalRecords').textContent = stats.total_records;
                 }
             },
             
-            // 更新最近活动
-            updateRecentActivity(activities) {
-                const container = document.getElementById('recentActivity');
-                if (!container) return;
-                
-                if (!activities || activities.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-4">
-                            <i class="bi bi-activity display-6 text-muted"></i>
-                            <p class="mt-2 text-muted">暂无活动记录</p>
-                        </div>
-                    `;
-                    return;
+            async loadRecentActivity() {
+                try {
+                    const logs = await AdminAPI.getLogs(1, 10);
+                    const activityDiv = document.getElementById('recentActivity');
+                    
+                    if (logs.success && logs.logs.length > 0) {
+                        let html = '<div class="list-group list-group-flush">';
+                        
+                        logs.logs.forEach(log => {
+                            const time = new Date(log.created_at).toLocaleString();
+                            const icon = this.getActionIcon(log.action_type);
+                            const color = this.getActionColor(log.action_type);
+                            
+                            html += `
+                                <div class="list-group-item d-flex justify-content-between align-items-center border-0 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="bi ${icon} text-${color}" style="font-size: 1.2rem;"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">${log.action_description}</h6>
+                                            <small class="text-muted">
+                                                ${log.username || '系统'} • ${time}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-${color}">${this.getActionTypeText(log.action_type)}</span>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        activityDiv.innerHTML = html;
+                    } else {
+                        activityDiv.innerHTML = `
+                            <div class="empty-state">
+                                <i class="bi bi-activity"></i>
+                                <p>暂无活动记录</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('加载最近活动失败:', error);
                 }
-                
-                const activityItems = activities.map(activity => `
-                    <div class="d-flex align-items-start mb-3">
-                        <div class="flex-shrink-0">
-                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
-                                 style="width: 40px; height: 40px;">
-                                <i class="bi bi-person text-primary"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="d-flex justify-content-between">
-                                <strong>${activity.admin_name || '系统'}</strong>
-                                <small class="text-muted">${new Date(activity.created_at).toLocaleString()}</small>
-                            </div>
-                            <div class="text-muted">${activity.description}</div>
-                            <small class="text-muted">${activity.action_type} • ${activity.ip_address || '未知IP'}</small>
-                        </div>
-                    </div>
-                `).join('');
-                
-                container.innerHTML = activityItems;
             },
             
-            // 加载不同部分的内容
+            getActionIcon(actionType) {
+                const icons = {
+                    'login': 'bi-box-arrow-in-right',
+                    'logout': 'bi-box-arrow-right',
+                    'generate_codes': 'bi-plus-circle',
+                    'review_application': 'bi-check-circle',
+                    'user_management': 'bi-person',
+                    'record_management': 'bi-clipboard-data',
+                    'invitation_management': 'bi-ticket',
+                    'view_stats': 'bi-bar-chart',
+                    'default': 'bi-activity'
+                };
+                
+                return icons[actionType] || icons.default;
+            },
+            
+            getActionColor(actionType) {
+                const colors = {
+                    'login': 'success',
+                    'logout': 'secondary',
+                    'generate_codes': 'primary',
+                    'review_application': 'warning',
+                    'user_management': 'info',
+                    'record_management': 'dark',
+                    'invitation_management': 'success',
+                    'view_stats': 'primary',
+                    'default': 'secondary'
+                };
+                
+                return colors[actionType] || colors.default;
+            },
+            
+            getActionTypeText(actionType) {
+                const texts = {
+                    'login': '登录',
+                    'logout': '退出',
+                    'generate_codes': '生成',
+                    'review_application': '审核',
+                    'user_management': '用户',
+                    'record_management': '记录',
+                    'invitation_management': '邀请码',
+                    'view_stats': '统计',
+                    'default': '其他'
+                };
+                
+                return texts[actionType] || texts.default;
+            },
+            
             async loadSectionContent(sectionId) {
                 switch(sectionId) {
                     case 'dashboard':
@@ -1200,404 +1216,411 @@
                     case 'invitations':
                         await this.loadInvitations();
                         break;
+                    case 'records':
+                        await this.loadRecords();
+                        break;
                     case 'logs':
                         await this.loadLogs();
                         break;
-                    case 'tools':
-                        await this.loadTools();
+                    case 'statistics':
+                        await this.loadStatistics();
+                        break;
+                    case 'settings':
+                        await this.loadSettings();
                         break;
                     default:
                         console.log(`加载 ${sectionId} 内容`);
                 }
             },
             
-            // 加载用户管理页面
-            async loadUsers() {
+            async loadUsers(page = 1, search = '') {
                 const contentDiv = document.getElementById('usersContent');
                 contentDiv.innerHTML = `
                     <div class="card card-admin">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">用户管理</h5>
-                            <div class="d-flex gap-2">
-                                <div class="input-group input-group-sm" style="width: 300px;">
-                                    <input type="text" class="form-control" id="userSearch" placeholder="搜索用户名或邮箱">
-                                    <button class="btn btn-outline-secondary" type="button" id="searchUsersBtn">
-                                        <i class="bi bi-search"></i>
-                                    </button>
+                            <h5 class="mb-0">用户列表</h5>
+                            <div class="d-flex">
+                                <div class="search-box me-2">
+                                    <i class="bi bi-search search-icon"></i>
+                                    <input type="text" class="form-control form-control-sm" id="userSearch" 
+                                           placeholder="搜索用户名或邮箱" value="${search}">
                                 </div>
-                                <button class="btn btn-sm btn-outline-primary" id="refreshUsersBtn">
+                                <button class="btn btn-sm btn-outline-primary me-2" id="refreshUsers">
                                     <i class="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div id="usersTableContainer">
-                                <div class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">加载中...</span>
-                                    </div>
-                                    <p class="mt-2">正在加载用户数据...</p>
-                                </div>
+                            <div class="table-responsive">
+                                <table class="table table-admin">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>用户名</th>
+                                            <th>用户类型</th>
+                                            <th>注册时间</th>
+                                            <th>最后登录</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                                <p class="mt-2">正在加载用户数据...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            <div class="pagination-container" id="usersPagination"></div>
                         </div>
                     </div>
                 `;
                 
                 // 加载用户数据
-                await this.loadUsersData();
-                
-                // 绑定搜索事件
-                document.getElementById('searchUsersBtn')?.addEventListener('click', () => {
-                    this.loadUsersData();
-                });
-                
-                document.getElementById('userSearch')?.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        this.loadUsersData();
+                try {
+                    const result = await AdminAPI.getUsers(page, CONFIG.PAGE_CONFIG.usersPerPage, search);
+                    if (result.success) {
+                        this.renderUsersTable(result.users, result.pagination);
                     }
-                });
+                } catch (error) {
+                    console.error('加载用户失败:', error);
+                    this.showToast('加载用户数据失败', 'danger');
+                }
+            },
+            
+            renderUsersTable(users, pagination) {
+                const tbody = document.getElementById('usersTableBody');
+                if (!users || users.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-people display-6 text-muted"></i>
+                                <p class="mt-2 text-muted">暂无用户数据</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
                 
-                // 绑定刷新事件
-                document.getElementById('refreshUsersBtn')?.addEventListener('click', () => {
-                    this.loadUsersData();
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>
+                            <strong>${user.username}</strong>
+                            ${user.user_type === 'admin' ? 
+                                '<span class="badge bg-danger ms-1">管理员</span>' : 
+                                user.user_type === 'registered' ? 
+                                '<span class="badge bg-success ms-1">会员</span>' : 
+                                '<span class="badge bg-warning ms-1">试用</span>'
+                            }
+                        </td>
+                        <td>${this.getUserTypeText(user.user_type)}</td>
+                        <td>${new Date(user.registration_date).toLocaleDateString()}</td>
+                        <td>${user.last_login ? new Date(user.last_login).toLocaleDateString() : '从未'}</td>
+                        <td>
+                            ${user.is_active ? 
+                                '<span class="badge bg-success">活跃</span>' : 
+                                '<span class="badge bg-secondary">禁用</span>'
+                            }
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
+                                    onclick="AdminUI.showUserDetail(${user.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger action-btn" title="删除" 
+                                    onclick="AdminUI.deleteUser(${user.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // 渲染分页
+                this.renderPagination('usersPagination', pagination, (page) => {
+                    const search = document.getElementById('userSearch').value;
+                    this.loadUsers(page, search);
                 });
             },
             
-            // 加载用户数据
-            async loadUsersData() {
-                const search = document.getElementById('userSearch')?.value || '';
-                const container = document.getElementById('usersTableContainer');
-                
+            getUserTypeText(userType) {
+                const types = {
+                    'admin': '管理员',
+                    'registered': '注册用户',
+                    'trial': '试用用户',
+                    'guest': '访客'
+                };
+                return types[userType] || userType;
+            },
+            
+            async showUserDetail(userId) {
                 try {
-                    this.showLoading('正在加载用户数据...');
-                    const result = await AdminAPI.getUsers(1, 20, search);
+                    AdminUI.showLoading();
+                    const result = await AdminAPI.getUserDetail(userId);
                     
                     if (result.success) {
-                        this.renderUsersTable(result.users, result.pagination);
-                    } else {
-                        container.innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                加载用户数据失败: ${result.error}
+                        const user = result.user;
+                        const modalContent = document.getElementById('userDetailContent');
+                        
+                        modalContent.innerHTML = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">用户名</label>
+                                        <input type="text" class="form-control" id="editUsername" value="${user.username}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">用户类型</label>
+                                        <select class="form-select" id="editUserType">
+                                            <option value="trial" ${user.user_type === 'trial' ? 'selected' : ''}>试用用户</option>
+                                            <option value="registered" ${user.user_type === 'registered' ? 'selected' : ''}>注册用户</option>
+                                            <option value="admin" ${user.user_type === 'admin' ? 'selected' : ''}>管理员</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">账户状态</label>
+                                        <select class="form-select" id="editIsActive">
+                                            <option value="true" ${user.is_active ? 'selected' : ''}>活跃</option>
+                                            <option value="false" ${!user.is_active ? 'selected' : ''}>禁用</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">注册时间</label>
+                                        <input type="text" class="form-control" value="${new Date(user.registration_date).toLocaleString()}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">最后登录</label>
+                                        <input type="text" class="form-control" value="${user.last_login ? new Date(user.last_login).toLocaleString() : '从未登录'}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">试用次数</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">已用/最大</span>
+                                            <input type="number" class="form-control" id="editTrialCount" value="${user.trial_count || 0}">
+                                            <input type="number" class="form-control" id="editMaxTrialCount" value="${user.max_trial_count || 18}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">订阅状态</label>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <select class="form-select" id="editSubscriptionType">
+                                                    <option value="">无订阅</option>
+                                                    <option value="monthly" ${user.subscription_type === 'monthly' ? 'selected' : ''}>月订阅</option>
+                                                    <option value="yearly" ${user.subscription_type === 'yearly' ? 'selected' : ''}>年订阅</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <select class="form-select" id="editSubscriptionActive">
+                                                    <option value="false" ${!user.subscription_active ? 'selected' : ''}>未激活</option>
+                                                    <option value="true" ${user.subscription_active ? 'selected' : ''}>已激活</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="date" class="form-control" id="editSubscriptionEndDate" 
+                                                       value="${user.subscription_end_date ? new Date(user.subscription_end_date).toISOString().split('T')[0] : ''}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                修改用户信息后请点击"保存更改"按钮
                             </div>
                         `;
+                        
+                        // 显示模态框
+                        const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+                        modal.show();
+                        
+                        // 保存用户信息
+                        document.getElementById('saveUserBtn').onclick = async () => {
+                            try {
+                                const updates = {
+                                    user_type: document.getElementById('editUserType').value,
+                                    is_active: document.getElementById('editIsActive').value === 'true',
+                                    max_trial_count: parseInt(document.getElementById('editMaxTrialCount').value),
+                                    subscription_type: document.getElementById('editSubscriptionType').value || null,
+                                    subscription_active: document.getElementById('editSubscriptionActive').value === 'true',
+                                    subscription_end_date: document.getElementById('editSubscriptionEndDate').value || null
+                                };
+                                
+                                const updateResult = await AdminAPI.updateUser(userId, updates);
+                                if (updateResult.success) {
+                                    modal.hide();
+                                    AdminUI.showToast('用户信息更新成功', 'success');
+                                    // 刷新用户列表
+                                    const search = document.getElementById('userSearch').value;
+                                    const currentPage = 1; // 回到第一页
+                                    this.loadUsers(currentPage, search);
+                                }
+                            } catch (error) {
+                                AdminUI.showToast('更新用户信息失败: ' + error.message, 'danger');
+                            }
+                        };
                     }
                 } catch (error) {
-                    container.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            加载用户数据失败: ${error.message}
-                        </div>
-                    `;
+                    AdminUI.showToast('获取用户详情失败', 'danger');
                 } finally {
-                    this.hideLoading();
+                    AdminUI.hideLoading();
                 }
             },
             
-            // 渲染用户表格
-            renderUsersTable(users, pagination) {
-                const container = document.getElementById('usersTableContainer');
-                
-                if (!users || users.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-5">
-                            <i class="bi bi-people display-6 text-muted"></i>
-                            <p class="mt-2 text-muted">暂无用户数据</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const tableHtml = `
-                    <div class="table-responsive">
-                        <table class="table table-admin table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>用户名</th>
-                                    <th>邮箱</th>
-                                    <th>用户类型</th>
-                                    <th>注册时间</th>
-                                    <th>最后登录</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${users.map(user => `
-                                    <tr>
-                                        <td>${user.id}</td>
-                                        <td>
-                                            <strong>${user.username}</strong>
-                                            ${user.user_type === 'admin' ? 
-                                                '<span class="badge bg-danger ms-1">管理员</span>' : 
-                                                user.user_type === 'registered' ? 
-                                                '<span class="badge bg-success ms-1">会员</span>' : 
-                                                '<span class="badge bg-warning ms-1">试用</span>'
-                                            }
-                                        </td>
-                                        <td>${user.email || '-'}</td>
-                                        <td>${user.user_type}</td>
-                                        <td>${new Date(user.registration_date || user.created_at).toLocaleDateString()}</td>
-                                        <td>${user.last_login ? new Date(user.last_login).toLocaleDateString() : '从未登录'}</td>
-                                        <td>
-                                            ${user.is_active ? 
-                                                '<span class="badge bg-success">活跃</span>' : 
-                                                '<span class="badge bg-secondary">禁用</span>'
-                                            }
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary action-btn" 
-                                                    onclick="AdminUI.editUser(${user.id})"
-                                                    title="编辑">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger action-btn" 
-                                                    onclick="AdminUI.deleteUser(${user.id}, '${user.username}')"
-                                                    title="删除">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    ${pagination ? `
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="text-muted">
-                                第 ${pagination.page} 页，共 ${pagination.total_pages} 页，总计 ${pagination.total} 条记录
-                            </div>
-                            <nav>
-                                <ul class="pagination pagination-sm">
-                                    <li class="page-item ${pagination.page === 1 ? 'disabled' : ''}">
-                                        <a class="page-link" href="#" onclick="AdminUI.loadUsersPage(${pagination.page - 1})">上一页</a>
-                                    </li>
-                                    ${Array.from({length: Math.min(5, pagination.total_pages)}, (_, i) => {
-                                        const pageNum = i + 1;
-                                        return `
-                                            <li class="page-item ${pageNum === pagination.page ? 'active' : ''}">
-                                                <a class="page-link" href="#" onclick="AdminUI.loadUsersPage(${pageNum})">${pageNum}</a>
-                                            </li>
-                                        `;
-                                    }).join('')}
-                                    <li class="page-item ${pagination.page === pagination.total_pages ? 'disabled' : ''}">
-                                        <a class="page-link" href="#" onclick="AdminUI.loadUsersPage(${pagination.page + 1})">下一页</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    ` : ''}
-                `;
-                
-                container.innerHTML = tableHtml;
-            },
-            
-            // 加载用户分页
-            async loadUsersPage(page) {
-                const search = document.getElementById('userSearch')?.value || '';
-                const container = document.getElementById('usersTableContainer');
-                
-                try {
-                    this.showLoading('正在加载用户数据...');
-                    const result = await AdminAPI.getUsers(page, 20, search);
-                    
-                    if (result.success) {
-                        this.renderUsersTable(result.users, result.pagination);
-                    }
-                } catch (error) {
-                    this.showAlert('加载用户数据失败: ' + error.message, 'danger');
-                } finally {
-                    this.hideLoading();
-                }
-            },
-            
-            // 编辑用户
-            editUser(userId) {
-                this.showAlert('编辑用户功能正在开发中', 'info');
-            },
-            
-            // 删除用户
-            async deleteUser(userId, username) {
-                if (!confirm(`确定要删除用户 "${username}" (ID: ${userId}) 吗？此操作不可撤销！`)) {
+            async deleteUser(userId) {
+                if (!confirm('确定要删除这个用户吗？此操作不可撤销。')) {
                     return;
                 }
                 
                 try {
-                    this.showLoading('正在删除用户...');
-                    
-                    const result = await AdminAPI.request(
-                        AppConfig.ENDPOINTS.adminUserDelete.replace(':id', userId),
-                        'DELETE'
-                    );
+                    AdminUI.showLoading();
+                    const result = await AdminAPI.deleteUser(userId);
                     
                     if (result.success) {
-                        this.showAlert(`用户 "${username}" 删除成功`, 'success');
+                        AdminUI.showToast('用户删除成功', 'success');
                         // 刷新用户列表
-                        await this.loadUsersData();
-                    } else {
-                        this.showAlert(`删除失败: ${result.error}`, 'danger');
+                        const search = document.getElementById('userSearch').value;
+                        const currentPage = 1; // 回到第一页
+                        this.loadUsers(currentPage, search);
                     }
                 } catch (error) {
-                    this.showAlert(`删除失败: ${error.message}`, 'danger');
+                    AdminUI.showToast('删除用户失败: ' + error.message, 'danger');
                 } finally {
-                    this.hideLoading();
+                    AdminUI.hideLoading();
                 }
             },
             
-            // 加载申请管理页面
-            async loadApplications() {
+            async loadApplications(status = 'pending') {
                 const contentDiv = document.getElementById('applicationsContent');
                 contentDiv.innerHTML = `
                     <div class="card card-admin">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">邀请码申请管理</h5>
+                            <h5 class="mb-0">邀请码申请</h5>
                             <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-outline-primary active" data-status="pending">
+                                <button type="button" class="btn btn-sm ${status === 'pending' ? 'btn-primary' : 'btn-outline-primary'}" 
+                                        data-status="pending" onclick="AdminUI.loadApplications('pending')">
                                     待处理
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-success" data-status="completed">
+                                <button type="button" class="btn btn-sm ${status === 'completed' ? 'btn-success' : 'btn-outline-success'}" 
+                                        data-status="completed" onclick="AdminUI.loadApplications('completed')">
                                     已批准
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-status="rejected">
+                                <button type="button" class="btn btn-sm ${status === 'rejected' ? 'btn-danger' : 'btn-outline-danger'}" 
+                                        data-status="rejected" onclick="AdminUI.loadApplications('rejected')">
                                     已拒绝
                                 </button>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div id="applicationsTableContainer">
-                                <div class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">加载中...</span>
-                                    </div>
-                                    <p class="mt-2">正在加载申请数据...</p>
-                                </div>
+                            <div class="table-responsive">
+                                <table class="table table-admin">
+                                    <thead>
+                                        <tr>
+                                            <th>申请ID</th>
+                                            <th>用户名</th>
+                                            <th>邮箱</th>
+                                            <th>用途</th>
+                                            <th>申请时间</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="applicationsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                                <p class="mt-2">正在加载申请数据...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            <div class="pagination-container" id="applicationsPagination"></div>
                         </div>
                     </div>
                 `;
                 
                 // 加载申请数据
-                await this.loadApplicationsData('pending');
-                
-                // 绑定状态切换按钮
-                contentDiv.querySelectorAll('[data-status]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const status = e.target.dataset.status;
-                        contentDiv.querySelectorAll('[data-status]').forEach(b => {
-                            b.classList.remove('active');
-                        });
-                        e.target.classList.add('active');
-                        this.loadApplicationsData(status);
-                    });
-                });
-            },
-            
-            // 加载申请数据
-            async loadApplicationsData(status) {
-                const container = document.getElementById('applicationsTableContainer');
-                
                 try {
-                    this.showLoading('正在加载申请数据...');
                     const result = await AdminAPI.getApplications(status);
-                    
                     if (result.success) {
-                        this.renderApplicationsTable(result.applications, status, result.pagination);
-                    } else {
-                        container.innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                加载申请数据失败: ${result.error}
-                            </div>
-                        `;
+                        this.renderApplicationsTable(result.applications, result.pagination, status);
                     }
                 } catch (error) {
-                    container.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            加载申请数据失败: ${error.message}
-                        </div>
-                    `;
-                } finally {
-                    this.hideLoading();
+                    console.error('加载申请失败:', error);
+                    this.showToast('加载申请数据失败', 'danger');
                 }
             },
             
-            // 渲染申请表格
-            renderApplicationsTable(applications, status, pagination) {
-                const container = document.getElementById('applicationsTableContainer');
-                
+            renderApplicationsTable(applications, pagination, status) {
+                const tbody = document.getElementById('applicationsTableBody');
                 if (!applications || applications.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-5">
-                            <i class="bi bi-file-earmark-text display-6 text-muted"></i>
-                            <p class="mt-2 text-muted">暂无${this.getStatusText(status)}申请</p>
-                        </div>
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-file-earmark-text display-6 text-muted"></i>
+                                <p class="mt-2 text-muted">暂无${this.getStatusText(status)}申请</p>
+                            </td>
+                        </tr>
                     `;
                     return;
                 }
                 
-                const tableHtml = `
-                    <div class="table-responsive">
-                        <table class="table table-admin table-hover">
-                            <thead>
-                                <tr>
-                                    <th>申请ID</th>
-                                    <th>用户名</th>
-                                    <th>邮箱</th>
-                                    <th>用途</th>
-                                    <th>申请时间</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${applications.map(app => `
-                                    <tr>
-                                        <td><code>${app.application_id}</code></td>
-                                        <td><strong>${app.username}</strong></td>
-                                        <td>${app.email || '-'}</td>
-                                        <td>${app.purpose}</td>
-                                        <td>${new Date(app.created_at).toLocaleString()}</td>
-                                        <td>
-                                            ${app.status === 'pending' ? 
-                                                '<span class="badge-status badge-pending">待处理</span>' :
-                                            app.status === 'completed' ? 
-                                                '<span class="badge-status badge-approved">已批准</span>' :
-                                                '<span class="badge-status badge-rejected">已拒绝</span>'
-                                            }
-                                        </td>
-                                        <td>
-                                            ${app.status === 'pending' ? `
-                                                <button class="btn btn-sm btn-success action-btn" 
-                                                        onclick="AdminUI.reviewApplication('${app.application_id}', 'approve', '${app.username}')"
-                                                        title="批准">
-                                                    <i class="bi bi-check-lg"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger action-btn" 
-                                                        onclick="AdminUI.reviewApplication('${app.application_id}', 'reject', '${app.username}')"
-                                                        title="拒绝">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            ` : ''}
-                                            <button class="btn btn-sm btn-info action-btn" 
-                                                    onclick="AdminUI.viewApplicationDetails('${app.application_id}')"
-                                                    title="查看详情">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+                tbody.innerHTML = applications.map(app => `
+                    <tr>
+                        <td><code>${app.application_id}</code></td>
+                        <td><strong>${app.username}</strong></td>
+                        <td>${app.email || '-'}</td>
+                        <td>${app.purpose}</td>
+                        <td>${new Date(app.created_at).toLocaleString()}</td>
+                        <td>
+                            ${app.status === 'pending' ? 
+                                '<span class="badge-status badge-pending">待处理</span>' :
+                            app.status === 'completed' ? 
+                                '<span class="badge-status badge-approved">已批准</span>' :
+                                '<span class="badge-status badge-rejected">已拒绝</span>'
+                            }
+                        </td>
+                        <td>
+                            ${app.status === 'pending' ? `
+                                <button class="btn btn-sm btn-success action-btn" 
+                                        onclick="AdminUI.reviewApplication('${app.application_id}', 'approve')"
+                                        title="批准">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger action-btn" 
+                                        onclick="AdminUI.reviewApplication('${app.application_id}', 'reject')"
+                                        title="拒绝">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-info action-btn" title="查看详情"
+                                    onclick="AdminUI.showApplicationDetail('${app.application_id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
                 
-                container.innerHTML = tableHtml;
+                // 渲染分页
+                this.renderPagination('applicationsPagination', pagination, (page) => {
+                    this.loadApplications(status, page);
+                });
             },
             
-            // 获取状态文本
             getStatusText(status) {
                 const statusMap = {
                     'pending': '待处理',
@@ -1607,405 +1630,635 @@
                 return statusMap[status] || status;
             },
             
-            // 审核申请
-            async reviewApplication(applicationId, action, username) {
-                const actionText = action === 'approve' ? '批准' : '拒绝';
-                
-                if (!confirm(`确定要${actionText}用户 "${username}" 的申请吗？`)) {
-                    return;
-                }
-                
-                const reviewNotes = prompt(`请输入${actionText}备注（可选）：`) || '';
-                
+            async showApplicationDetail(applicationId) {
                 try {
-                    this.showLoading(`正在${actionText}申请...`);
-                    
-                    const result = await AdminAPI.reviewApplication(applicationId, action, reviewNotes);
+                    AdminUI.showLoading();
+                    const result = await AdminAPI.getApplicationDetail(applicationId);
                     
                     if (result.success) {
-                        this.showAlert(`申请已${actionText}！`, 'success');
-                        // 刷新申请列表
-                        const activeBtn = document.querySelector('[data-status].active');
-                        if (activeBtn) {
-                            const status = activeBtn.dataset.status;
-                            await this.loadApplicationsData(status);
+                        const app = result.application;
+                        const modalContent = document.getElementById('applicationDetailContent');
+                        
+                        modalContent.innerHTML = `
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">申请ID</label>
+                                <div class="form-control-plaintext">${app.id}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">用户名</label>
+                                <div class="form-control-plaintext">${app.username}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">邮箱</label>
+                                <div class="form-control-plaintext">${app.email || '未提供'}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">用途</label>
+                                <div class="form-control-plaintext">${app.purpose}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">备注</label>
+                                <div class="form-control-plaintext">${app.notes || '无'}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">申请时间</label>
+                                <div class="form-control-plaintext">${new Date(app.created_at).toLocaleString()}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">状态</label>
+                                <div class="form-control-plaintext">
+                                    ${app.status === 'pending' ? 
+                                        '<span class="badge-status badge-pending">待处理</span>' :
+                                    app.status === 'completed' ? 
+                                        '<span class="badge-status badge-approved">已批准</span>' :
+                                        '<span class="badge-status badge-rejected">已拒绝</span>'
+                                    }
+                                </div>
+                            </div>
+                            ${app.status === 'completed' && app.generated_code ? `
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">生成的邀请码</label>
+                                    <div class="form-control-plaintext">
+                                        <code class="text-success">${app.generated_code}</code>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${app.review_notes ? `
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">审核备注</label>
+                                    <div class="form-control-plaintext">${app.review_notes}</div>
+                                </div>
+                            ` : ''}
+                            ${app.reviewed_at ? `
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">审核时间</label>
+                                    <div class="form-control-plaintext">${new Date(app.reviewed_at).toLocaleString()}</div>
+                                </div>
+                            ` : ''}
+                        `;
+                        
+                        // 显示模态框
+                        const modal = new bootstrap.Modal(document.getElementById('applicationDetailModal'));
+                        modal.show();
+                        
+                        // 设置按钮事件
+                        document.getElementById('approveApplicationBtn').onclick = () => {
+                            modal.hide();
+                            this.reviewApplication(applicationId, 'approve');
+                        };
+                        
+                        document.getElementById('rejectApplicationBtn').onclick = () => {
+                            modal.hide();
+                            this.reviewApplication(applicationId, 'reject');
+                        };
+                        
+                        // 如果已处理，隐藏操作按钮
+                        if (app.status !== 'pending') {
+                            document.getElementById('approveApplicationBtn').style.display = 'none';
+                            document.getElementById('rejectApplicationBtn').style.display = 'none';
                         }
-                    } else {
-                        this.showAlert(`${actionText}失败: ${result.error}`, 'danger');
                     }
                 } catch (error) {
-                    this.showAlert(`${actionText}失败: ${error.message}`, 'danger');
+                    AdminUI.showToast('获取申请详情失败', 'danger');
                 } finally {
-                    this.hideLoading();
+                    AdminUI.hideLoading();
                 }
             },
             
-            // 查看申请详情
-            viewApplicationDetails(applicationId) {
-                this.showAlert('申请详情功能正在开发中', 'info');
+            async reviewApplication(applicationId, action) {
+                const notes = prompt(`请输入${action === 'approve' ? '批准' : '拒绝'}备注（可选）：`);
+                
+                try {
+                    AdminUI.showLoading();
+                    const result = await AdminAPI.reviewApplication(applicationId, action, notes);
+                    
+                    if (result.success) {
+                        AdminUI.showToast(`申请已${action === 'approve' ? '批准' : '拒绝'}！`, 'success');
+                        // 刷新申请列表
+                        this.loadApplications('pending');
+                    } else {
+                        AdminUI.showToast('操作失败: ' + result.error, 'danger');
+                    }
+                } catch (error) {
+                    AdminUI.showToast('操作失败: ' + error.message, 'danger');
+                } finally {
+                    AdminUI.hideLoading();
+                }
             },
             
-            // 加载邀请码管理页面
-            async loadInvitations() {
+            async loadInvitations(status = 'all') {
                 const contentDiv = document.getElementById('invitationsContent');
                 contentDiv.innerHTML = `
                     <div class="card card-admin">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">邀请码管理</h5>
-                            <button class="btn btn-primary" id="showGenerateModalBtn">
-                                <i class="bi bi-plus-lg me-1"></i> 生成邀请码
-                            </button>
+                            <div class="d-flex">
+                                <div class="btn-group me-2" role="group">
+                                    <button type="button" class="btn btn-sm ${status === 'all' ? 'btn-primary' : 'btn-outline-primary'}" 
+                                            onclick="AdminUI.loadInvitations('all')">
+                                        全部
+                                    </button>
+                                    <button type="button" class="btn btn-sm ${status === 'active' ? 'btn-success' : 'btn-outline-success'}" 
+                                            onclick="AdminUI.loadInvitations('active')">
+                                        有效
+                                    </button>
+                                    <button type="button" class="btn btn-sm ${status === 'inactive' ? 'btn-secondary' : 'btn-outline-secondary'}" 
+                                            onclick="AdminUI.loadInvitations('inactive')">
+                                        无效
+                                    </button>
+                                </div>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateInvitesModal">
+                                    <i class="bi bi-plus-lg me-1"></i> 生成邀请码
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle me-2"></i>
                                 邀请码用于用户注册，可以设置使用次数和有效期。
                             </div>
-                            <div id="invitationsList" class="mt-3">
-                                <div class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">加载中...</span>
-                                    </div>
-                                    <p class="mt-2">正在加载邀请码数据...</p>
-                                </div>
+                            <div class="table-responsive">
+                                <table class="table table-admin">
+                                    <thead>
+                                        <tr>
+                                            <th>邀请码</th>
+                                            <th>创建者</th>
+                                            <th>用途</th>
+                                            <th>使用情况</th>
+                                            <th>状态</th>
+                                            <th>有效期</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="invitationsTableBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                                <p class="mt-2">正在加载邀请码数据...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            <div class="pagination-container" id="invitationsPagination"></div>
                         </div>
                     </div>
                 `;
                 
-                // 绑定生成邀请码按钮
-                document.getElementById('showGenerateModalBtn').addEventListener('click', () => {
-                    const modal = new bootstrap.Modal(document.getElementById('generateInvitesModal'));
-                    modal.show();
-                });
-                
                 // 加载邀请码数据
-                await this.loadInvitationsData();
-            },
-            
-            // 加载邀请码数据
-            async loadInvitationsData() {
-                const container = document.getElementById('invitationsList');
-                
                 try {
-                    const result = await AdminAPI.request(AppConfig.ENDPOINTS.invitationCodes);
-                    
-                    if (result.success && result.codes) {
-                        this.renderInvitationsList(result.codes);
-                    } else {
-                        container.innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                加载邀请码数据失败
-                            </div>
-                        `;
+                    const result = await AdminAPI.getInvitations(1, CONFIG.PAGE_CONFIG.usersPerPage, status);
+                    if (result.success) {
+                        this.renderInvitationsTable(result.invitations, result.pagination, status);
                     }
                 } catch (error) {
-                    container.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            加载邀请码数据失败: ${error.message}
-                        </div>
-                    `;
+                    console.error('加载邀请码失败:', error);
+                    this.showToast('加载邀请码数据失败', 'danger');
                 }
             },
             
-            // 渲染邀请码列表
-            renderInvitationsList(codes) {
-                const container = document.getElementById('invitationsList');
-                
-                if (!codes || codes.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-5">
-                            <i class="bi bi-ticket-perforated display-6 text-muted"></i>
-                            <p class="mt-2 text-muted">暂无邀请码数据</p>
-                        </div>
+            renderInvitationsTable(invitations, pagination, status) {
+                const tbody = document.getElementById('invitationsTableBody');
+                if (!invitations || invitations.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-ticket-perforated display-6 text-muted"></i>
+                                <p class="mt-2 text-muted">暂无邀请码数据</p>
+                            </td>
+                        </tr>
                     `;
                     return;
                 }
                 
-                const invitationsHtml = `
-                    <div class="table-responsive">
-                        <table class="table table-admin table-hover">
-                            <thead>
-                                <tr>
-                                    <th>邀请码</th>
-                                    <th>创建者</th>
-                                    <th>用途</th>
-                                    <th>使用次数</th>
-                                    <th>状态</th>
-                                    <th>创建时间</th>
-                                    <th>有效期</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${codes.map(code => `
-                                    <tr>
-                                        <td><code class="fw-bold">${code.code}</code></td>
-                                        <td>${code.created_by}</td>
-                                        <td>${code.purpose || '未指定'}</td>
-                                        <td>${code.used_count || 0} / ${code.max_uses || 1}</td>
-                                        <td>
-                                            ${code.is_active ? 
-                                                '<span class="badge bg-success">有效</span>' : 
-                                                '<span class="badge bg-secondary">无效</span>'
-                                            }
-                                            ${code.expires_at && new Date(code.expires_at) < new Date() ? 
-                                                '<span class="badge bg-warning ms-1">已过期</span>' : ''
-                                            }
-                                        </td>
-                                        <td>${new Date(code.created_at).toLocaleDateString()}</td>
-                                        <td>${code.expires_at ? new Date(code.expires_at).toLocaleDateString() : '永久有效'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                tbody.innerHTML = invitations.map(invite => {
+                    const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
+                    const isFullyUsed = invite.used_count >= invite.max_uses;
+                    
+                    let statusBadge = '';
+                    if (!invite.is_active) {
+                        statusBadge = '<span class="badge bg-secondary">已禁用</span>';
+                    } else if (isExpired) {
+                        statusBadge = '<span class="badge bg-warning">已过期</span>';
+                    } else if (isFullyUsed) {
+                        statusBadge = '<span class="badge bg-info">已用完</span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-success">有效</span>';
+                    }
+                    
+                    return `
+                        <tr>
+                            <td><code class="fw-bold">${invite.code}</code></td>
+                            <td>${invite.created_by}</td>
+                            <td>${invite.purpose || '未指定'}</td>
+                            <td>${invite.used_count}/${invite.max_uses}</td>
+                            <td>${statusBadge}</td>
+                            <td>${invite.expires_at ? new Date(invite.expires_at).toLocaleDateString() : '永久有效'}</td>
+                            <td>${new Date(invite.created_at).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
+                                        onclick="AdminUI.showInvitationDetail(${invite.id})">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger action-btn" title="删除"
+                                        onclick="AdminUI.deleteInvitation(${invite.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                // 渲染分页
+                this.renderPagination('invitationsPagination', pagination, (page) => {
+                    this.loadInvitations(status, page);
+                });
+            },
+            
+            async showInvitationDetail(codeId) {
+                try {
+                    AdminUI.showLoading();
+                    const result = await AdminAPI.getInvitationDetail(codeId);
+                    
+                    if (result.success) {
+                        const invite = result.invitation;
+                        const modalContent = document.getElementById('userDetailContent');
+                        
+                        modalContent.innerHTML = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">邀请码</label>
+                                        <input type="text" class="form-control" value="${invite.code}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">创建者</label>
+                                        <input type="text" class="form-control" value="${invite.created_by}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">用途</label>
+                                        <input type="text" class="form-control" value="${invite.purpose || '未指定'}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">使用情况</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">已用/最大</span>
+                                            <input type="text" class="form-control" value="${invite.used_count}" readonly>
+                                            <input type="text" class="form-control" value="${invite.max_uses}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">状态</label>
+                                        <select class="form-select" id="editInviteStatus">
+                                            <option value="true" ${invite.is_active ? 'selected' : ''}>有效</option>
+                                            <option value="false" ${!invite.is_active ? 'selected' : ''}>无效</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">有效期</label>
+                                        <input type="date" class="form-control" id="editInviteExpiry" 
+                                               value="${invite.expires_at ? new Date(invite.expires_at).toISOString().split('T')[0] : ''}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">创建时间</label>
+                                        <input type="text" class="form-control" value="${new Date(invite.created_at).toLocaleString()}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">备注</label>
+                                        <textarea class="form-control" id="editInviteNotes" rows="2">${invite.notes || ''}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                修改邀请码信息后请点击"保存更改"按钮
+                            </div>
+                        `;
+                        
+                        // 显示模态框
+                        const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+                        modal.show();
+                        
+                        // 更新按钮文本
+                        document.getElementById('saveUserBtn').textContent = '保存邀请码更改';
+                        
+                        // 保存邀请码信息
+                        document.getElementById('saveUserBtn').onclick = async () => {
+                            try {
+                                const updates = {
+                                    is_active: document.getElementById('editInviteStatus').value === 'true',
+                                    expires_at: document.getElementById('editInviteExpiry').value || null,
+                                    notes: document.getElementById('editInviteNotes').value
+                                };
+                                
+                                const updateResult = await AdminAPI.updateInvitation(codeId, updates);
+                                if (updateResult.success) {
+                                    modal.hide();
+                                    AdminUI.showToast('邀请码信息更新成功', 'success');
+                                    // 刷新邀请码列表
+                                    this.loadInvitations();
+                                }
+                            } catch (error) {
+                                AdminUI.showToast('更新邀请码信息失败: ' + error.message, 'danger');
+                            }
+                        };
+                    }
+                } catch (error) {
+                    AdminUI.showToast('获取邀请码详情失败', 'danger');
+                } finally {
+                    AdminUI.hideLoading();
+                }
+            },
+            
+            async deleteInvitation(codeId) {
+                if (!confirm('确定要删除这个邀请码吗？此操作不可撤销。')) {
+                    return;
+                }
+                
+                try {
+                    AdminUI.showLoading();
+                    const result = await AdminAPI.deleteInvitation(codeId);
+                    
+                    if (result.success) {
+                        AdminUI.showToast('邀请码删除成功', 'success');
+                        // 刷新邀请码列表
+                        this.loadInvitations();
+                    }
+                } catch (error) {
+                    AdminUI.showToast('删除邀请码失败: ' + error.message, 'danger');
+                } finally {
+                    AdminUI.hideLoading();
+                }
+            },
+            
+            async loadRecords(page = 1) {
+                const contentDiv = document.getElementById('recordsContent');
+                contentDiv.innerHTML = `
+                    <div class="card card-admin">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">记录管理</h5>
+                            <div class="d-flex">
+                                <div class="search-box me-2">
+                                    <i class="bi bi-search search-icon"></i>
+                                    <input type="text" class="form-control form-control-sm" id="recordSearch" 
+                                           placeholder="搜索用户ID">
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" id="refreshRecords">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-admin">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>用户</th>
+                                            <th>赛事名称</th>
+                                            <th>盘口类型</th>
+                                            <th>推荐</th>
+                                            <th>结果</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recordsTableBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                                <p class="mt-2">正在加载记录数据...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination-container" id="recordsPagination"></div>
+                        </div>
                     </div>
                 `;
                 
-                container.innerHTML = invitationsHtml;
+                // 加载记录数据
+                try {
+                    const search = document.getElementById('recordSearch')?.value;
+                    const userId = search ? parseInt(search) : null;
+                    
+                    const result = await AdminAPI.getRecords(page, CONFIG.PAGE_CONFIG.recordsPerPage, userId);
+                    if (result.success) {
+                        this.renderRecordsTable(result.records, result.pagination);
+                    }
+                } catch (error) {
+                    console.error('加载记录失败:', error);
+                    this.showToast('加载记录数据失败', 'danger');
+                }
             },
             
-            // 加载操作日志页面
-            async loadLogs() {
+            renderRecordsTable(records, pagination) {
+                const tbody = document.getElementById('recordsTableBody');
+                if (!records || records.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-clipboard-data display-6 text-muted"></i>
+                                <p class="mt-2 text-muted">暂无记录数据</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = records.map(record => `
+                    <tr>
+                        <td>${record.id}</td>
+                        <td>
+                            <strong>${record.user_name || '未知用户'}</strong>
+                            <br><small class="text-muted">ID: ${record.user_id}</small>
+                        </td>
+                        <td>${record.match_name}</td>
+                        <td>
+                            <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
+                                ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
+                            </span>
+                        </td>
+                        <td>${record.recommendation}</td>
+                        <td>
+                            ${record.actual_result === 'win' ? 
+                                '<span class="badge bg-success">赢</span>' :
+                            record.actual_result === 'loss' ? 
+                                '<span class="badge bg-danger">输</span>' :
+                                '<span class="badge bg-secondary">未设置</span>'
+                            }
+                        </td>
+                        <td>${new Date(record.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
+                                    onclick="AdminUI.showRecordDetail(${record.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // 渲染分页
+                this.renderPagination('recordsPagination', pagination, (page) => {
+                    this.loadRecords(page);
+                });
+            },
+            
+            async loadLogs(page = 1) {
                 const contentDiv = document.getElementById('logsContent');
                 contentDiv.innerHTML = `
                     <div class="card card-admin">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">操作日志</h5>
-                            <button class="btn btn-sm btn-outline-danger" id="clearLogsBtn">
-                                <i class="bi bi-trash me-1"></i> 清理日志
-                            </button>
+                            <div class="d-flex">
+                                <button class="btn btn-sm btn-outline-primary" id="refreshLogs">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div id="logsTableContainer">
-                                <div class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">加载中...</span>
-                                    </div>
-                                    <p class="mt-2">正在加载操作日志...</p>
-                                </div>
+                            <div class="table-responsive">
+                                <table class="table table-admin">
+                                    <thead>
+                                        <tr>
+                                            <th>时间</th>
+                                            <th>用户</th>
+                                            <th>操作类型</th>
+                                            <th>操作描述</th>
+                                            <th>IP地址</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logsTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">加载中...</span>
+                                                </div>
+                                                <p class="mt-2">正在加载日志数据...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            <div class="pagination-container" id="logsPagination"></div>
                         </div>
                     </div>
                 `;
                 
                 // 加载日志数据
-                await this.loadLogsData();
-                
-                // 绑定清理日志按钮
-                document.getElementById('clearLogsBtn').addEventListener('click', async () => {
-                    if (confirm('确定要清理30天前的日志吗？此操作不可撤销！')) {
-                        try {
-                            this.showLoading('正在清理日志...');
-                            const result = await AdminAPI.request(
-                                AppConfig.ENDPOINTS.adminClearLogs,
-                                'DELETE',
-                                { days_to_keep: 30 }
-                            );
-                            
-                            if (result.success) {
-                                this.showAlert(result.message, 'success');
-                                await this.loadLogsData();
-                            } else {
-                                this.showAlert(`清理失败: ${result.error}`, 'danger');
-                            }
-                        } catch (error) {
-                            this.showAlert(`清理失败: ${error.message}`, 'danger');
-                        } finally {
-                            this.hideLoading();
-                        }
-                    }
-                });
-            },
-            
-            // 加载日志数据
-            async loadLogsData() {
-                const container = document.getElementById('logsTableContainer');
-                
                 try {
-                    const result = await AdminAPI.getLogs();
-                    
+                    const result = await AdminAPI.getLogs(page, CONFIG.PAGE_CONFIG.logsPerPage);
                     if (result.success) {
                         this.renderLogsTable(result.logs, result.pagination);
-                    } else {
-                        container.innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                加载日志失败: ${result.error}
-                            </div>
-                        `;
                     }
                 } catch (error) {
-                    container.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            加载日志失败: ${error.message}
-                        </div>
-                    `;
+                    console.error('加载日志失败:', error);
+                    this.showToast('加载日志数据失败', 'danger');
                 }
             },
             
-            // 渲染日志表格
             renderLogsTable(logs, pagination) {
-                const container = document.getElementById('logsTableContainer');
-                
+                const tbody = document.getElementById('logsTableBody');
                 if (!logs || logs.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-5">
-                            <i class="bi bi-journal-text display-6 text-muted"></i>
-                            <p class="mt-2 text-muted">暂无操作日志</p>
-                        </div>
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <i class="bi bi-journal-text display-6 text-muted"></i>
+                                <p class="mt-2 text-muted">暂无日志数据</p>
+                            </td>
+                        </tr>
                     `;
                     return;
                 }
                 
-                const tableHtml = `
-                    <div class="table-responsive">
-                        <table class="table table-admin table-hover">
-                            <thead>
-                                <tr>
-                                    <th>时间</th>
-                                    <th>管理员</th>
-                                    <th>操作类型</th>
-                                    <th>描述</th>
-                                    <th>目标ID</th>
-                                    <th>IP地址</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${logs.map(log => `
-                                    <tr>
-                                        <td>${new Date(log.created_at).toLocaleString()}</td>
-                                        <td>${log.admin_name || '系统'}</td>
-                                        <td><span class="badge bg-info">${log.action_type}</span></td>
-                                        <td>${log.description}</td>
-                                        <td>${log.target_id || '-'}</td>
-                                        <td><code>${log.ip_address || '未知'}</code></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    ${pagination ? `
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="text-muted">
-                                第 ${pagination.page} 页，共 ${pagination.total_pages} 页，总计 ${pagination.total} 条记录
-                            </div>
-                            <nav>
-                                <ul class="pagination pagination-sm">
-                                    <li class="page-item ${pagination.page === 1 ? 'disabled' : ''}">
-                                        <a class="page-link" href="#" onclick="AdminUI.loadLogsPage(${pagination.page - 1})">上一页</a>
-                                    </li>
-                                    <li class="page-item ${pagination.page === pagination.total_pages ? 'disabled' : ''}">
-                                        <a class="page-link" href="#" onclick="AdminUI.loadLogsPage(${pagination.page + 1})">下一页</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    ` : ''}
-                `;
+                tbody.innerHTML = logs.map(log => `
+                    <tr>
+                        <td>${new Date(log.created_at).toLocaleString()}</td>
+                        <td><strong>${log.username || log.user_name || '系统'}</strong></td>
+                        <td>
+                            <span class="badge bg-${this.getActionColor(log.action_type)}">
+                                ${this.getActionTypeText(log.action_type)}
+                            </span>
+                        </td>
+                        <td>${log.action_description}</td>
+                        <td><code class="text-muted">${log.ip_address || '未知'}</code></td>
+                    </tr>
+                `).join('');
                 
-                container.innerHTML = tableHtml;
+                // 渲染分页
+                this.renderPagination('logsPagination', pagination, (page) => {
+                    this.loadLogs(page);
+                });
             },
             
-            // 加载日志分页
-            async loadLogsPage(page) {
-                const container = document.getElementById('logsTableContainer');
-                
-                try {
-                    this.showLoading('正在加载日志...');
-                    const result = await AdminAPI.getLogs(page);
-                    
-                    if (result.success) {
-                        this.renderLogsTable(result.logs, result.pagination);
-                    }
-                } catch (error) {
-                    this.showAlert('加载日志失败: ' + error.message, 'danger');
-                } finally {
-                    this.hideLoading();
-                }
-            },
-            
-            // 加载系统工具页面
-            async loadTools() {
-                const contentDiv = document.getElementById('toolsContent');
+            async loadStatistics() {
+                const contentDiv = document.getElementById('statisticsContent');
                 contentDiv.innerHTML = `
                     <div class="card card-admin">
                         <div class="card-header">
-                            <h5 class="mb-0">系统工具</h5>
+                            <h5 class="mb-0">统计分析</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <div class="card">
-                                        <div class="card-body text-center">
-                                            <i class="bi bi-database-check display-4 text-primary mb-3"></i>
-                                            <h5>数据库维护</h5>
-                                            <p class="text-muted">检查和修复数据库表结构</p>
-                                            <div class="d-grid gap-2">
-                                                <button class="btn btn-outline-primary" id="checkTablesBtn">
-                                                    <i class="bi bi-search me-2"></i>检查表结构
-                                                </button>
-                                                <button class="btn btn-outline-warning" id="repairTablesBtn">
-                                                    <i class="bi bi-tools me-2"></i>修复表结构
-                                                </button>
+                                <div class="col-md-8">
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">用户增长趋势</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="userGrowthChart"></canvas>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="col-md-6 mb-4">
-                                    <div class="card">
-                                        <div class="card-body text-center">
-                                            <i class="bi bi-download display-4 text-success mb-3"></i>
-                                            <h5>数据导出</h5>
-                                            <p class="text-muted">导出系统数据为JSON或CSV格式</p>
-                                            <div class="d-grid gap-2">
-                                                <button class="btn btn-outline-success" onclick="AdminUI.exportData('users')">
-                                                    <i class="bi bi-people me-2"></i>导出用户数据
-                                                </button>
-                                                <button class="btn btn-outline-info" onclick="AdminUI.exportData('records')">
-                                                    <i class="bi bi-clipboard-data me-2"></i>导出记录数据
-                                                </button>
-                                                <button class="btn btn-outline-secondary" onclick="AdminUI.exportData('logs')">
-                                                    <i class="bi bi-journal-text me-2"></i>导出操作日志
-                                                </button>
+                                <div class="col-md-4">
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">用户类型分布</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="userTypeChart"></canvas>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="col-md-6 mb-4">
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
                                     <div class="card">
-                                        <div class="card-body text-center">
-                                            <i class="bi bi-gear display-4 text-info mb-3"></i>
-                                            <h5>系统配置</h5>
-                                            <p class="text-muted">管理系统配置和API设置</p>
-                                            <div class="d-grid gap-2">
-                                                <button class="btn btn-outline-info" id="apiConfigBtn">
-                                                    <i class="bi bi-plug me-2"></i>API服务器配置
-                                                </button>
-                                                <button class="btn btn-outline-secondary" id="clearCacheBtn">
-                                                    <i class="bi bi-trash me-2"></i>清理本地缓存
-                                                </button>
-                                            </div>
+                                        <div class="card-header">
+                                            <h6 class="mb-0">邀请码使用统计</h6>
                                         </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6 mb-4">
-                                    <div class="card">
-                                        <div class="card-body text-center">
-                                            <i class="bi bi-info-circle display-4 text-warning mb-3"></i>
-                                            <h5>系统信息</h5>
-                                            <p class="text-muted">查看系统状态和版本信息</p>
-                                            <div id="systemInfo">
-                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                    <span class="visually-hidden">加载中...</span>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-3">
+                                                        <h3 id="totalInvites">0</h3>
+                                                        <p class="text-muted mb-0">总邀请码数</p>
+                                                    </div>
                                                 </div>
-                                                <span class="ms-2">正在加载系统信息...</span>
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-3">
+                                                        <h3 id="activeInvitesStat">0</h3>
+                                                        <p class="text-muted mb-0">有效邀请码</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-3">
+                                                        <h3 id="usedInvites">0</h3>
+                                                        <p class="text-muted mb-0">已使用次数</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2015,150 +2268,337 @@
                     </div>
                 `;
                 
-                // 加载系统信息
-                await this.loadSystemInfo();
-                
-                // 绑定工具按钮事件
-                document.getElementById('checkTablesBtn')?.addEventListener('click', async () => {
-                    try {
-                        this.showLoading('正在检查表结构...');
-                        const result = await AdminAPI.checkTables();
-                        
-                        if (result.success) {
-                            let info = '<h6>表结构检查结果:</h6><ul class="text-start">';
-                            Object.keys(result.tables).forEach(table => {
-                                const tableInfo = result.tables[table];
-                                info += `<li><strong>${table}:</strong> `;
-                                if (tableInfo.exists) {
-                                    info += `<span class="text-success">✓ 存在 (${tableInfo.columns.length} 列)</span>`;
-                                } else {
-                                    info += `<span class="text-danger">✗ 缺失</span>`;
-                                }
-                                info += '</li>';
-                            });
-                            info += '</ul>';
-                            
-                            this.showAlert(info, 'info', 10000);
-                        } else {
-                            this.showAlert(`检查失败: ${result.error}`, 'danger');
-                        }
-                    } catch (error) {
-                        this.showAlert(`检查失败: ${error.message}`, 'danger');
-                    } finally {
-                        this.hideLoading();
-                    }
-                });
-                
-                document.getElementById('repairTablesBtn')?.addEventListener('click', async () => {
-                    if (!confirm('确定要修复表结构吗？这可能会修改数据库结构。')) {
-                        return;
+                // 加载统计数据并绘制图表
+                try {
+                    const [statsResult, inviteStatsResult] = await Promise.all([
+                        AdminAPI.getStats(),
+                        AdminAPI.request(CONFIG.ADMIN_ENDPOINTS.invitationStats)
+                    ]);
+                    
+                    if (statsResult.success) {
+                        this.renderStatisticsCharts(statsResult.stats);
                     }
                     
-                    try {
-                        this.showLoading('正在修复表结构...');
-                        const result = await AdminAPI.repairTables();
-                        
-                        if (result.success) {
-                            this.showAlert(`修复完成: ${result.message} (修复了 ${result.repairedCount} 个缺失列)`, 'success');
-                        } else {
-                            this.showAlert(`修复失败: ${result.error}`, 'danger');
+                    if (inviteStatsResult.success) {
+                        this.renderInvitationStats(inviteStatsResult.stats);
+                    }
+                } catch (error) {
+                    console.error('加载统计数据失败:', error);
+                    this.showToast('加载统计数据失败', 'danger');
+                }
+            },
+            
+            renderStatisticsCharts(stats) {
+                // 用户增长趋势图表
+                if (stats.weekly_trend && stats.weekly_trend.length > 0) {
+                    const ctx1 = document.getElementById('userGrowthChart').getContext('2d');
+                    const dates = stats.weekly_trend.map(item => new Date(item.date).toLocaleDateString());
+                    const counts = stats.weekly_trend.map(item => item.count);
+                    
+                    new Chart(ctx1, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: '新增用户数',
+                                data: counts,
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
+                                }
+                            }
                         }
-                    } catch (error) {
-                        this.showAlert(`修复失败: ${error.message}`, 'danger');
-                    } finally {
-                        this.hideLoading();
+                    });
+                }
+                
+                // 用户类型分布图表
+                if (stats.user_types) {
+                    const ctx2 = document.getElementById('userTypeChart').getContext('2d');
+                    const labels = Object.keys(stats.user_types).map(key => this.getUserTypeText(key));
+                    const data = Object.values(stats.user_types);
+                    const backgroundColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
+                    
+                    new Chart(ctx2, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            
+            renderInvitationStats(stats) {
+                if (stats.codes) {
+                    document.getElementById('totalInvites').textContent = stats.codes.total || 0;
+                    document.getElementById('activeInvitesStat').textContent = stats.codes.active || 0;
+                    document.getElementById('usedInvites').textContent = stats.codes.total_used || 0;
+                }
+            },
+            
+            async loadSettings() {
+                const contentDiv = document.getElementById('settingsContent');
+                contentDiv.innerHTML = `
+                    <div class="card card-admin">
+                        <div class="card-header">
+                            <h5 class="mb-0">系统设置</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="settingsForm">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">用户设置</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="maxTrialCount" class="form-label">最大试用次数</label>
+                                                    <input type="number" class="form-control" id="maxTrialCount" 
+                                                           min="1" max="100" value="18">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="trialExpiryDays" class="form-label">试用有效期（天）</label>
+                                                    <input type="number" class="form-control" id="trialExpiryDays" 
+                                                           min="1" max="365" value="30">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">是否开放注册</label>
+                                                    <div>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="registrationEnabled" id="regEnabled" value="true" checked>
+                                                            <label class="form-check-label" for="regEnabled">开放</label>
+                                                        </div>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="registrationEnabled" id="regDisabled" value="false">
+                                                            <label class="form-check-label" for="regDisabled">关闭</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">邀请码设置</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="inviteExpiryDays" class="form-label">邀请码有效期（天）</label>
+                                                    <input type="number" class="form-control" id="inviteExpiryDays" 
+                                                           min="1" max="365" value="30">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="defaultMaxUses" class="form-label">默认最大使用次数</label>
+                                                    <input type="number" class="form-control" id="defaultMaxUses" 
+                                                           min="1" max="100" value="1">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="maxGenerateCount" class="form-label">单次最大生成数量</label>
+                                                    <input type="number" class="form-control" id="maxGenerateCount" 
+                                                           min="1" max="500" value="100">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">系统维护</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">系统维护模式</label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="maintenanceMode">
+                                                        <label class="form-check-label" for="maintenanceMode">启用维护模式</label>
+                                                    </div>
+                                                    <small class="text-muted">启用后普通用户将无法访问系统</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="dataRetentionDays" class="form-label">数据保留天数</label>
+                                                    <input type="number" class="form-control" id="dataRetentionDays" 
+                                                           min="30" max="3650" value="365">
+                                                    <small class="text-muted">系统将自动清理超过此天数的日志记录</small>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <button type="button" class="btn btn-outline-primary" id="repairTablesBtn">
+                                                        <i class="bi bi-tools me-1"></i> 修复数据库表
+                                                    </button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="bi bi-save me-1"></i> 保存设置
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                
+                // 加载当前设置
+                try {
+                    const result = await AdminAPI.getSettings();
+                    if (result.success) {
+                        this.populateSettingsForm(result.settings);
+                    }
+                } catch (error) {
+                    console.error('加载设置失败:', error);
+                }
+                
+                // 绑定修复表按钮事件
+                document.getElementById('repairTablesBtn').addEventListener('click', async () => {
+                    if (confirm('确定要修复数据库表吗？此操作可能需要一些时间。')) {
+                        try {
+                            AdminUI.showLoading();
+                            const result = await AdminAPI.repairTables();
+                            if (result.success) {
+                                AdminUI.showToast('数据库表修复成功', 'success');
+                            }
+                        } catch (error) {
+                            AdminUI.showToast('修复数据库表失败: ' + error.message, 'danger');
+                        } finally {
+                            AdminUI.hideLoading();
+                        }
                     }
                 });
                 
-                document.getElementById('apiConfigBtn')?.addEventListener('click', () => {
-                    const modal = new bootstrap.Modal(document.getElementById('apiConfigModal'));
-                    document.getElementById('configApiUrl').value = AppConfig.getApiUrl();
-                    document.getElementById('currentApiDisplay').textContent = AppConfig.getApiUrl();
-                    modal.show();
-                });
-                
-                document.getElementById('clearCacheBtn')?.addEventListener('click', () => {
-                    if (confirm('确定要清理所有本地缓存数据吗？这包括登录信息和API地址设置。')) {
-                        localStorage.clear();
-                        AdminState.clearAuth();
-                        this.showAlert('本地缓存已清理，请重新登录', 'info');
-                        this.showLoginPage();
+                // 绑定表单提交事件
+                document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const settings = {
+                        max_trial_count: parseInt(document.getElementById('maxTrialCount').value),
+                        trial_expiry_days: parseInt(document.getElementById('trialExpiryDays').value),
+                        registration_enabled: document.querySelector('input[name="registrationEnabled"]:checked').value === 'true',
+                        invitation_code_expiry_days: parseInt(document.getElementById('inviteExpiryDays').value),
+                        default_max_uses: parseInt(document.getElementById('defaultMaxUses').value),
+                        max_generate_count: parseInt(document.getElementById('maxGenerateCount').value),
+                        maintenance_mode: document.getElementById('maintenanceMode').checked,
+                        data_retention_days: parseInt(document.getElementById('dataRetentionDays').value)
+                    };
+                    
+                    try {
+                        AdminUI.showLoading();
+                        const result = await AdminAPI.updateSettings(settings);
+                        if (result.success) {
+                            AdminUI.showToast('系统设置已保存', 'success');
+                        }
+                    } catch (error) {
+                        AdminUI.showToast('保存设置失败: ' + error.message, 'danger');
+                    } finally {
+                        AdminUI.hideLoading();
                     }
                 });
             },
             
-            // 加载系统信息
-            async loadSystemInfo() {
-                const container = document.getElementById('systemInfo');
+            populateSettingsForm(settings) {
+                if (settings.max_trial_count) {
+                    document.getElementById('maxTrialCount').value = settings.max_trial_count;
+                }
+                if (settings.invitation_code_expiry_days) {
+                    document.getElementById('inviteExpiryDays').value = settings.invitation_code_expiry_days;
+                }
+                if (settings.max_generate_count) {
+                    document.getElementById('maxGenerateCount').value = settings.max_generate_count;
+                }
+                if (settings.data_retention_days) {
+                    document.getElementById('dataRetentionDays').value = settings.data_retention_days;
+                }
+                if (settings.registration_enabled !== undefined) {
+                    document.getElementById(settings.registration_enabled ? 'regEnabled' : 'regDisabled').checked = true;
+                }
+                if (settings.maintenance_mode !== undefined) {
+                    document.getElementById('maintenanceMode').checked = settings.maintenance_mode;
+                }
+            },
+            
+            renderPagination(containerId, pagination, pageChangeCallback) {
+                const container = document.getElementById(containerId);
                 if (!container) return;
                 
-                try {
-                    const testResult = await AdminAPI.testConnection();
-                    
-                    let infoHtml = `
-                        <div class="text-start">
-                            <p><strong>API状态:</strong> 
-                                ${testResult.success ? 
-                                    '<span class="text-success">✓ 正常连接</span>' : 
-                                    '<span class="text-danger">✗ 连接失败</span>'
-                                }
-                            </p>
-                            <p><strong>API地址:</strong> <code>${AppConfig.getApiUrl()}</code></p>
-                            <p><strong>管理员:</strong> ${AdminState.adminInfo?.username || '未登录'}</p>
-                            <p><strong>当前时间:</strong> ${new Date().toLocaleString()}</p>
-                        </div>
-                    `;
-                    
-                    container.innerHTML = infoHtml;
-                } catch (error) {
-                    container.innerHTML = `
-                        <div class="text-start">
-                            <p><strong>API状态:</strong> <span class="text-danger">✗ 连接失败</span></p>
-                            <p><strong>错误:</strong> ${error.message}</p>
-                        </div>
+                if (!pagination || pagination.totalPages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                let html = '<nav><ul class="pagination pagination-sm">';
+                
+                // 上一页按钮
+                html += `
+                    <li class="page-item ${pagination.hasPrev ? '' : 'disabled'}">
+                        <a class="page-link" href="#" ${pagination.hasPrev ? `onclick="event.preventDefault(); ${pageChangeCallback.name}(${pagination.page - 1})"` : ''}>
+                            &laquo;
+                        </a>
+                    </li>
+                `;
+                
+                // 页码按钮
+                const maxVisible = 5;
+                let startPage = Math.max(1, pagination.page - Math.floor(maxVisible / 2));
+                let endPage = Math.min(pagination.totalPages, startPage + maxVisible - 1);
+                
+                if (endPage - startPage + 1 < maxVisible) {
+                    startPage = Math.max(1, endPage - maxVisible + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    html += `
+                        <li class="page-item ${i === pagination.page ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="event.preventDefault(); ${pageChangeCallback.name}(${i})">
+                                ${i}
+                            </a>
+                        </li>
                     `;
                 }
-            },
-            
-            // 导出数据
-            async exportData(type) {
-                try {
-                    this.showLoading('正在导出数据...');
-                    
-                    const result = await AdminAPI.exportData(type, 'json');
-                    
-                    if (result && result.success !== false) {
-                        // 创建一个下载链接
-                        const dataStr = JSON.stringify(result, null, 2);
-                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                        const url = URL.createObjectURL(dataBlob);
-                        
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `${type}_export_${new Date().toISOString().split('T')[0]}.json`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        
-                        this.showAlert(`${type}数据导出成功`, 'success');
-                    } else {
-                        this.showAlert(`导出失败: ${result?.error || '未知错误'}`, 'danger');
-                    }
-                } catch (error) {
-                    this.showAlert(`导出失败: ${error.message}`, 'danger');
-                } finally {
-                    this.hideLoading();
-                }
+                
+                // 下一页按钮
+                html += `
+                    <li class="page-item ${pagination.hasNext ? '' : 'disabled'}">
+                        <a class="page-link" href="#" ${pagination.hasNext ? `onclick="event.preventDefault(); ${pageChangeCallback.name}(${pagination.page + 1})"` : ''}>
+                            &raquo;
+                        </a>
+                    </li>
+                `;
+                
+                html += '</ul></nav>';
+                container.innerHTML = html;
             }
         };
 
-        // ==================== 事件监听器 ====================
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('管理面板初始化...');
-            console.log('当前API地址:', AppConfig.getApiUrl());
-            
-            // 初始化认证状态
+        // ==================== 事件处理 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化状态
             const isAuthenticated = AdminState.init();
             
             if (isAuthenticated) {
@@ -2167,106 +2607,36 @@
                 AdminUI.showLoginPage();
             }
             
-            // 测试API连接按钮
-            document.getElementById('testApiBtn')?.addEventListener('click', async function() {
-                const apiUrlInput = document.getElementById('apiUrl');
-                const connectionStatus = document.getElementById('connectionStatus');
-                
-                if (apiUrlInput && apiUrlInput.value.trim()) {
-                    // 保存测试的API地址
-                    const testUrl = apiUrlInput.value.trim();
-                    const originalUrl = AppConfig.getApiUrl();
-                    
-                    // 临时设置API地址
-                    localStorage.setItem('admin_api_url', testUrl);
-                    
-                    connectionStatus.classList.remove('d-none');
-                    connectionStatus.innerHTML = `
-                        <div class="d-flex align-items-center">
-                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                            正在测试连接...
-                        </div>
-                    `;
-                    
-                    try {
-                        const testResult = await AdminAPI.testConnection();
-                        
-                        if (testResult.success) {
-                            connectionStatus.className = 'alert alert-success';
-                            connectionStatus.innerHTML = `
-                                <i class="bi bi-check-circle me-2"></i>
-                                连接成功: ${testResult.message}
-                            `;
-                        } else {
-                            connectionStatus.className = 'alert alert-danger';
-                            connectionStatus.innerHTML = `
-                                <i class="bi bi-x-circle me-2"></i>
-                                连接失败: ${testResult.message}
-                            `;
-                            // 恢复原始地址
-                            localStorage.setItem('admin_api_url', originalUrl);
-                        }
-                    } catch (error) {
-                        connectionStatus.className = 'alert alert-danger';
-                        connectionStatus.innerHTML = `
-                            <i class="bi bi-x-circle me-2"></i>
-                            连接失败: ${error.message}
-                        `;
-                        // 恢复原始地址
-                        localStorage.setItem('admin_api_url', originalUrl);
-                    }
-                    
-                    // 5秒后隐藏状态消息
-                    setTimeout(() => {
-                        connectionStatus.classList.add('d-none');
-                    }, 5000);
-                }
-            });
-            
             // 登录表单提交
-            document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
                 const username = document.getElementById('adminUsername').value.trim();
                 const password = document.getElementById('adminPassword').value;
-                const apiUrl = document.getElementById('apiUrl')?.value.trim();
-                const loginBtn = document.querySelector('#loginForm button[type="submit"]');
-                const loginBtnText = document.getElementById('loginBtnText');
-                const loginLoading = document.getElementById('loginLoading');
                 
                 if (!username || !password) {
-                    AdminUI.showAlert('请输入用户名和密码', 'warning');
+                    AdminUI.showAlert('请输入用户名和密码');
                     return;
                 }
                 
-                // 保存API地址（如果提供了）
-                if (apiUrl) {
-                    AppConfig.setApiUrl(apiUrl);
-                }
+                const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+                const loginBtnText = document.getElementById('loginBtnText');
+                const loginLoading = document.getElementById('loginLoading');
                 
                 loginBtn.disabled = true;
                 loginBtnText.textContent = '登录中...';
                 loginLoading.classList.remove('d-none');
                 
                 try {
-                    // 先测试API连接
-                    const testResult = await AdminAPI.testConnection();
-                    if (!testResult.success) {
-                        AdminUI.showAlert(`API连接失败: ${testResult.message}`, 'danger');
-                        return;
-                    }
-                    
-                    // 执行登录
                     const result = await AdminAPI.login(username, password);
                     
                     if (result.success) {
-                        AdminUI.showAlert('登录成功', 'success');
                         AdminUI.showAdminDashboard();
                     } else {
-                        AdminUI.showAlert(result.error || '登录失败', 'danger');
+                        AdminUI.showAlert(result.error || '登录失败');
                     }
                 } catch (error) {
-                    AdminUI.showAlert('登录失败: ' + error.message, 'danger');
+                    AdminUI.showAlert('登录失败: ' + error.message);
                 } finally {
                     loginBtn.disabled = false;
                     loginBtnText.textContent = '登录';
@@ -2284,135 +2654,136 @@
             });
             
             // 退出登录
-            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 if (confirm('确定要退出登录吗？')) {
                     AdminState.clearAuth();
-                    AdminUI.showAlert('已退出登录', 'info');
                     AdminUI.showLoginPage();
                 }
             });
             
             // 刷新统计
-            document.getElementById('refreshStats')?.addEventListener('click', function() {
+            document.getElementById('refreshStats').addEventListener('click', function() {
                 AdminUI.loadDashboard();
             });
             
-            // API状态按钮
-            document.getElementById('apiStatusBtn')?.addEventListener('click', async function() {
-                AdminUI.showLoading('正在检查API状态...');
-                try {
-                    const testResult = await AdminAPI.testConnection();
-                    if (testResult.success) {
-                        AdminUI.showAlert(`API状态: 正常 (${testResult.message})`, 'success');
-                    } else {
-                        AdminUI.showAlert(`API状态: 异常 (${testResult.message})`, 'danger');
-                    }
-                } catch (error) {
-                    AdminUI.showAlert(`API状态检查失败: ${error.message}`, 'danger');
-                } finally {
-                    AdminUI.hideLoading();
-                }
-            });
-            
             // 生成邀请码按钮
-            document.getElementById('generateInvitesBtn')?.addEventListener('click', function() {
-                AdminUI.showSection('invitations');
-                // 显示生成模态框
-                setTimeout(() => {
-                    const showBtn = document.getElementById('showGenerateModalBtn');
-                    if (showBtn) showBtn.click();
-                }, 100);
+            document.getElementById('generateInvitesBtn').addEventListener('click', function() {
+                const modal = new bootstrap.Modal(document.getElementById('generateInvitesModal'));
+                modal.show();
             });
             
             // 查看申请按钮
-            document.getElementById('viewAppsBtn')?.addEventListener('click', function() {
+            document.getElementById('viewAppsBtn').addEventListener('click', function() {
                 AdminUI.showSection('applications');
             });
             
-            // 导出数据按钮
-            document.getElementById('exportDataBtn')?.addEventListener('click', function() {
-                AdminUI.showSection('tools');
+            // 系统日志按钮
+            document.getElementById('systemLogsBtn').addEventListener('click', function() {
+                AdminUI.showSection('logs');
             });
             
-            // 系统工具按钮
-            document.getElementById('systemToolsBtn')?.addEventListener('click', function() {
-                AdminUI.showSection('tools');
+            // 导出数据按钮
+            document.getElementById('exportDataBtn').addEventListener('click', function() {
+                AdminUI.showToast('导出数据功能开发中...', 'info');
             });
             
             // 确认生成邀请码
-            document.getElementById('confirmGenerateBtn')?.addEventListener('click', async function() {
+            document.getElementById('confirmGenerateBtn').addEventListener('click', async function() {
                 const count = parseInt(document.getElementById('inviteCount').value);
                 const purpose = document.getElementById('invitePurpose').value.trim();
                 const expiryDays = parseInt(document.getElementById('expiryDays').value);
                 const maxUses = parseInt(document.getElementById('maxUses').value);
                 
                 if (!purpose) {
-                    AdminUI.showAlert('请填写用途说明', 'warning');
-                    return;
-                }
-                
-                if (isNaN(count) || count < 1 || count > 100) {
-                    AdminUI.showAlert('生成数量必须在1-100之间', 'warning');
+                    AdminUI.showToast('请填写用途说明', 'warning');
                     return;
                 }
                 
                 const modal = bootstrap.Modal.getInstance(document.getElementById('generateInvitesModal'));
                 
                 try {
-                    AdminUI.showLoading(`正在生成 ${count} 个邀请码...`);
+                    AdminUI.showLoading();
                     
                     const result = await AdminAPI.generateInvitationCodes({
                         count,
-                        createdBy: AdminState.adminInfo?.username || 'admin',
                         purpose,
+                        expiryDays,
+                        maxUses,
+                        createdBy: AdminState.adminInfo.username,
                         format: 'json'
                     });
                     
                     if (result.success) {
-                        AdminUI.showAlert(`成功生成 ${result.count || result.codes?.length || 0} 个邀请码！`, 'success');
+                        AdminUI.showToast(`成功生成 ${result.count || result.codes.length} 个邀请码！`, 'success');
                         modal.hide();
                         
                         // 重置表单
                         document.getElementById('generateInvitesForm').reset();
                         
                         // 刷新邀请码列表
-                        if (document.getElementById('invitationsSection').style.display !== 'none') {
-                            await AdminUI.loadInvitationsData();
-                        }
+                        AdminUI.loadInvitations();
                     } else {
-                        AdminUI.showAlert('生成失败: ' + (result.error || '未知错误'), 'danger');
+                        AdminUI.showToast('生成失败: ' + result.error, 'danger');
                     }
                 } catch (error) {
-                    AdminUI.showAlert('生成失败: ' + error.message, 'danger');
+                    AdminUI.showToast('生成失败: ' + error.message, 'danger');
                 } finally {
                     AdminUI.hideLoading();
                 }
             });
             
-            // 保存API配置
-            document.getElementById('saveApiConfigBtn')?.addEventListener('click', function() {
-                const apiUrl = document.getElementById('configApiUrl').value.trim();
-                
-                if (!apiUrl) {
-                    AdminUI.showAlert('请填写API服务器地址', 'warning');
-                    return;
-                }
-                
-                AppConfig.setApiUrl(apiUrl);
-                
-                const modal = bootstrap.Modal.getInstance(document.getElementById('apiConfigModal'));
-                modal.hide();
-                
-                AdminUI.showAlert('API地址已更新，可能需要重新登录', 'info');
-                
-                // 更新显示
-                document.getElementById('currentApiUrl').textContent = 
-                    AppConfig.getApiUrl().replace(/^https?:\/\//, '');
-            });
-            
             // 初始化显示控制面板
             AdminUI.showSection('dashboard');
+            
+            // 添加搜索框实时搜索功能
+            document.addEventListener('input', function(e) {
+                if (e.target.id === 'userSearch') {
+                    // 防抖处理，延迟500ms执行搜索
+                    clearTimeout(window.searchTimeout);
+                    window.searchTimeout = setTimeout(() => {
+                        const search = e.target.value;
+                        AdminUI.loadUsers(1, search);
+                    }, 500);
+                }
+                
+                if (e.target.id === 'recordSearch') {
+                    clearTimeout(window.recordSearchTimeout);
+                    window.recordSearchTimeout = setTimeout(() => {
+                        AdminUI.loadRecords(1);
+                    }, 500);
+                }
+            });
+            
+            // 添加回车键搜索功能
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    if (e.target.id === 'userSearch') {
+                        const search = e.target.value;
+                        AdminUI.loadUsers(1, search);
+                    }
+                    
+                    if (e.target.id === 'recordSearch') {
+                        AdminUI.loadRecords(1);
+                    }
+                }
+            });
+            
+            // 添加刷新按钮事件
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'refreshUsers' || e.target.closest('#refreshUsers')) {
+                    const search = document.getElementById('userSearch')?.value || '';
+                    AdminUI.loadUsers(1, search);
+                }
+                
+                if (e.target.id === 'refreshRecords' || e.target.closest('#refreshRecords')) {
+                    AdminUI.loadRecords(1);
+                }
+                
+                if (e.target.id === 'refreshLogs' || e.target.closest('#refreshLogs')) {
+                    AdminUI.loadLogs(1);
+                }
+            });
         });
     </script>
 </body>
