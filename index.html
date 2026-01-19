@@ -644,7 +644,20 @@
             
             // 本地开发环境的API地址
             LOCAL_API_URL: 'http://localhost:3000',
-            
+             // 获取当前API地址
+    getApiUrl() {
+        // 优先使用本地存储的配置
+        const savedUrl = localStorage.getItem('admin_api_url');
+        if (savedUrl) return savedUrl;
+        
+        // 检查当前页面是否是本地开发
+        const isLocal = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '';
+        
+        // 如果是本地开发，使用本地API，否则使用生产API
+        return isLocal ? this.LOCAL_API_URL : this.DEFAULT_API_URL;
+    },
             // API端点配置
             ENDPOINTS: {
                 // 公共端点
