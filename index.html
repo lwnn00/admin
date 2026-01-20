@@ -314,6 +314,131 @@
         @keyframes spinner-border {
             to { transform: rotate(360deg); }
         }
+        
+        /* 新增样式：选项卡样式 */
+        .nav-tabs-custom {
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .nav-tabs-custom .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .nav-tabs-custom .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        /* 密码强度指示器 */
+        .password-strength {
+            height: 5px;
+            margin-top: 5px;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        
+        .strength-weak {
+            background-color: #dc3545;
+            width: 25%;
+        }
+        
+        .strength-fair {
+            background-color: #ffc107;
+            width: 50%;
+        }
+        
+        .strength-good {
+            background-color: #28a745;
+            width: 75%;
+        }
+        
+        .strength-strong {
+            background-color: #20c997;
+            width: 100%;
+        }
+        
+        /* 记录统计卡片 */
+        .record-stats-card {
+            height: 100%;
+        }
+        
+        .record-stats-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 20px;
+        }
+        
+        .record-stats-body {
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label-small {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        /* 水位分布图表样式 */
+        .odds-distribution {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .odds-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .odds-label {
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+        
+        .odds-bar-inner {
+            flex: 1;
+            height: 24px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .odds-fill {
+            height: 100%;
+            border-radius: 12px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.5s ease;
+        }
     </style>
 </head>
 <body>
@@ -667,8 +792,89 @@
                     <h5 class="modal-title">用户详情</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="userDetailContent">
-                    <!-- 用户详情内容将通过JavaScript动态加载 -->
+                <div class="modal-body">
+                    <!-- 选项卡导航 -->
+                    <ul class="nav nav-tabs nav-tabs-custom mb-3" id="userTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="userInfoTab" data-bs-toggle="tab" 
+                                    data-bs-target="#userInfoContent" type="button" role="tab">
+                                <i class="bi bi-info-circle me-1"></i>基本信息
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="passwordTab" data-bs-toggle="tab" 
+                                    data-bs-target="#passwordContent" type="button" role="tab">
+                                <i class="bi bi-key me-1"></i>密码管理
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- 选项卡内容 -->
+                    <div class="tab-content" id="userTabContent">
+                        <!-- 基本信息选项卡 -->
+                        <div class="tab-pane fade show active" id="userInfoContent" role="tabpanel">
+                            <div id="userDetailContent">
+                                <!-- 用户基本信息内容将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 密码管理选项卡 -->
+                        <div class="tab-pane fade" id="passwordContent" role="tabpanel">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                密码修改和重置功能。重置密码将生成随机密码并通过邮件发送给用户。
+                            </div>
+                            
+                            <!-- 修改密码表单 -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">修改密码</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="changePasswordForm">
+                                        <div class="mb-3">
+                                            <label for="newPassword" class="form-label">新密码</label>
+                                            <input type="password" class="form-control" id="newPassword" 
+                                                   placeholder="请输入新密码" minlength="8">
+                                            <div class="password-strength mt-2"></div>
+                                            <small class="text-muted">密码必须至少8个字符，包含字母和数字</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="confirmPassword" class="form-label">确认密码</label>
+                                            <input type="password" class="form-control" id="confirmPassword" 
+                                                   placeholder="请再次输入新密码">
+                                            <div class="invalid-feedback" id="passwordMatchError">
+                                                两次输入的密码不一致
+                                            </div>
+                                        </div>
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary" id="changePasswordBtn">
+                                                <i class="bi bi-key me-1"></i>修改密码
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <!-- 重置密码 -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">重置密码</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        重置密码将生成一个随机密码并通过电子邮件发送给用户。用户下次登录时需要修改密码。
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-warning" id="resetPasswordBtn">
+                                            <i class="bi bi-arrow-clockwise me-1"></i>重置密码并发送邮件
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
@@ -746,11 +952,14 @@
                 // 用户管理
                 users: '/api/admin/users',
                 userDetail: (userId) => `/api/admin/users/${userId}`,
+                changePassword: (userId) => `/api/admin/users/${userId}/change-password`,
+                resetPassword: (userId) => `/api/admin/users/${userId}/reset-password`,
                 
                 // 统计信息
                 stats: '/api/admin/stats',
                 invitationStats: '/api/invitation-stats',
                 applicationStats: '/api/admin/applications/stats',
+                recordStats: '/api/admin/records/stats', // 新增：记录统计
                 
                 // 邀请码管理
                 invitations: '/api/admin/invitations',
@@ -805,6 +1014,7 @@
             isAuthenticated: false,
             adminInfo: null,
             authToken: null,
+            currentEditingUserId: null, // 新增：当前编辑的用户ID
             
             init() {
                 this.authToken = localStorage.getItem('adminToken');
@@ -921,6 +1131,18 @@
                 return this.request(CONFIG.ADMIN_ENDPOINTS.userDetail(userId), 'DELETE');
             },
             
+            // 新增：修改密码
+            async changePassword(userId, newPassword) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.changePassword(userId), 'POST', {
+                    new_password: newPassword
+                });
+            },
+            
+            // 新增：重置密码
+            async resetPassword(userId) {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.resetPassword(userId), 'POST');
+            },
+            
             async getApplications(status = 'pending', page = 1, limit = 20) {
                 return this.request(`${CONFIG.ADMIN_ENDPOINTS.applications}?status=${status}&page=${page}&limit=${limit}`);
             },
@@ -968,6 +1190,11 @@
                 let url = `${CONFIG.ADMIN_ENDPOINTS.records}?page=${page}&limit=${limit}`;
                 if (userId) url += `&userId=${userId}`;
                 return this.request(url);
+            },
+            
+            // 新增：获取记录统计
+            async getRecordStats() {
+                return this.request(CONFIG.ADMIN_ENDPOINTS.recordStats);
             },
             
             async getLogs(page = 1, limit = 50) {
@@ -1370,6 +1597,7 @@
             async showUserDetail(userId) {
                 try {
                     AdminUI.showLoading();
+                    AdminState.currentEditingUserId = userId; // 保存当前编辑的用户ID
                     const result = await AdminAPI.getUserDetail(userId);
                     
                     if (result.success) {
@@ -1412,7 +1640,7 @@
                                         <label class="form-label">试用次数</label>
                                         <div class="input-group">
                                             <span class="input-group-text">已用/最大</span>
-                                            <input type="number" class="form-control" id="editTrialCount" value="${user.trial_count || 0}">
+                                            <input type="number" class="form-control" id="editTrialCount" value="${user.trial_count || 0}" readonly>
                                             <input type="number" class="form-control" id="editMaxTrialCount" value="${user.max_trial_count || 18}">
                                         </div>
                                     </div>
@@ -1454,6 +1682,9 @@
                         const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
                         modal.show();
                         
+                        // 初始化密码管理相关事件
+                        this.initPasswordManagement(userId);
+                        
                         // 保存用户信息
                         document.getElementById('saveUserBtn').onclick = async () => {
                             try {
@@ -1468,7 +1699,6 @@
                                 
                                 const updateResult = await AdminAPI.updateUser(userId, updates);
                                 if (updateResult.success) {
-                                    modal.hide();
                                     AdminUI.showToast('用户信息更新成功', 'success');
                                     // 刷新用户列表
                                     const search = document.getElementById('userSearch').value;
@@ -1485,6 +1715,142 @@
                 } finally {
                     AdminUI.hideLoading();
                 }
+            },
+            
+            // 初始化密码管理相关功能
+            initPasswordManagement(userId) {
+                // 密码强度检查
+                const passwordInput = document.getElementById('newPassword');
+                const strengthBar = document.querySelector('.password-strength');
+                
+                if (passwordInput) {
+                    passwordInput.addEventListener('input', function() {
+                        const password = this.value;
+                        AdminUI.checkPasswordStrength(password, strengthBar);
+                    });
+                }
+                
+                // 确认密码验证
+                const confirmPasswordInput = document.getElementById('confirmPassword');
+                const newPasswordInput = document.getElementById('newPassword');
+                
+                if (confirmPasswordInput && newPasswordInput) {
+                    confirmPasswordInput.addEventListener('input', function() {
+                        if (this.value !== newPasswordInput.value) {
+                            this.classList.add('is-invalid');
+                        } else {
+                            this.classList.remove('is-invalid');
+                        }
+                    });
+                }
+                
+                // 修改密码表单提交
+                const changePasswordForm = document.getElementById('changePasswordForm');
+                if (changePasswordForm) {
+                    changePasswordForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        
+                        const newPassword = document.getElementById('newPassword').value;
+                        const confirmPassword = document.getElementById('confirmPassword').value;
+                        
+                        if (!newPassword) {
+                            AdminUI.showToast('请输入新密码', 'warning');
+                            return;
+                        }
+                        
+                        if (newPassword.length < 8) {
+                            AdminUI.showToast('密码长度至少8位', 'warning');
+                            return;
+                        }
+                        
+                        if (newPassword !== confirmPassword) {
+                            AdminUI.showToast('两次输入的密码不一致', 'warning');
+                            return;
+                        }
+                        
+                        try {
+                            AdminUI.showLoading();
+                            const result = await AdminAPI.changePassword(userId, newPassword);
+                            
+                            if (result.success) {
+                                AdminUI.showToast('密码修改成功', 'success');
+                                // 清空表单
+                                document.getElementById('changePasswordForm').reset();
+                                document.querySelector('.password-strength').className = 'password-strength';
+                            } else {
+                                AdminUI.showToast('密码修改失败: ' + result.error, 'danger');
+                            }
+                        } catch (error) {
+                            AdminUI.showToast('密码修改失败: ' + error.message, 'danger');
+                        } finally {
+                            AdminUI.hideLoading();
+                        }
+                    });
+                }
+                
+                // 重置密码按钮
+                const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+                if (resetPasswordBtn) {
+                    resetPasswordBtn.addEventListener('click', async function() {
+                        if (!confirm('确定要重置该用户的密码吗？系统将生成随机密码并通过邮件发送给用户。')) {
+                            return;
+                        }
+                        
+                        try {
+                            AdminUI.showLoading();
+                            const result = await AdminAPI.resetPassword(userId);
+                            
+                            if (result.success) {
+                                AdminUI.showToast('密码重置成功，已发送邮件通知用户', 'success');
+                            } else {
+                                AdminUI.showToast('密码重置失败: ' + result.error, 'danger');
+                            }
+                        } catch (error) {
+                            AdminUI.showToast('密码重置失败: ' + error.message, 'danger');
+                        } finally {
+                            AdminUI.hideLoading();
+                        }
+                    });
+                }
+            },
+            
+            // 检查密码强度
+            checkPasswordStrength(password, strengthBar) {
+                let strength = 0;
+                
+                // 长度检查
+                if (password.length >= 8) strength += 1;
+                if (password.length >= 12) strength += 1;
+                
+                // 包含数字
+                if (/\d/.test(password)) strength += 1;
+                
+                // 包含小写字母
+                if (/[a-z]/.test(password)) strength += 1;
+                
+                // 包含大写字母
+                if (/[A-Z]/.test(password)) strength += 1;
+                
+                // 包含特殊字符
+                if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+                
+                // 更新强度指示器
+                let strengthClass = 'strength-weak';
+                let strengthText = '弱';
+                
+                if (strength >= 5) {
+                    strengthClass = 'strength-strong';
+                    strengthText = '强';
+                } else if (strength >= 3) {
+                    strengthClass = 'strength-good';
+                    strengthText = '良好';
+                } else if (strength >= 2) {
+                    strengthClass = 'strength-fair';
+                    strengthText = '一般';
+                }
+                
+                strengthBar.className = `password-strength ${strengthClass}`;
+                strengthBar.title = `密码强度: ${strengthText}`;
             },
             
             async deleteUser(userId) {
@@ -2242,6 +2608,96 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- 新增：用户记录内容统计 -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">用户记录内容统计</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="card record-stats-card">
+                                                        <div class="record-stats-header">
+                                                            <h6 class="mb-0">记录结果分布</h6>
+                                                        </div>
+                                                        <div class="record-stats-body">
+                                                            <div class="stats-grid">
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value" id="totalRecordsCount">0</div>
+                                                                    <div class="stat-label-small">总记录数</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-success" id="winRecordsCount">0</div>
+                                                                    <div class="stat-label-small">赢</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-danger" id="lossRecordsCount">0</div>
+                                                                    <div class="stat-label-small">输</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-secondary" id="pendingRecordsCount">0</div>
+                                                                    <div class="stat-label-small">未设置</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card record-stats-card">
+                                                        <div class="record-stats-header">
+                                                            <h6 class="mb-0">盘口类型分布</h6>
+                                                        </div>
+                                                        <div class="record-stats-body">
+                                                            <div class="stats-grid">
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-info" id="asianHandicapCount">0</div>
+                                                                    <div class="stat-label-small">让球盘</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-warning" id="overUnderCount">0</div>
+                                                                    <div class="stat-label-small">大小盘</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="chart-container mt-3" style="height: 200px;">
+                                                                <canvas id="handicapTypeChart"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- 水位分布统计 -->
+                                            <div class="row mt-4">
+                                                <div class="col-12">
+                                                    <div class="card">
+                                                        <div class="record-stats-header">
+                                                            <h6 class="mb-0">水位分布统计</h6>
+                                                        </div>
+                                                        <div class="record-stats-body">
+                                                            <div id="oddsDistribution">
+                                                                <div class="text-center py-4">
+                                                                    <div class="spinner-border text-primary" role="status">
+                                                                        <span class="visually-hidden">加载中...</span>
+                                                                    </div>
+                                                                    <p class="mt-2">正在加载水位分布数据...</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="chart-container mt-3" style="height: 250px;">
+                                                                <canvas id="oddsDistributionChart"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 邀请码使用统计 -->
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card">
@@ -2279,9 +2735,10 @@
                 
                 // 加载统计数据并绘制图表
                 try {
-                    const [statsResult, inviteStatsResult] = await Promise.all([
+                    const [statsResult, inviteStatsResult, recordStatsResult] = await Promise.all([
                         AdminAPI.getStats(),
-                        AdminAPI.request(CONFIG.ADMIN_ENDPOINTS.invitationStats)
+                        AdminAPI.request(CONFIG.ADMIN_ENDPOINTS.invitationStats),
+                        AdminAPI.getRecordStats() // 新增：加载记录统计
                     ]);
                     
                     if (statsResult.success) {
@@ -2290,6 +2747,11 @@
                     
                     if (inviteStatsResult.success) {
                         this.renderInvitationStats(inviteStatsResult.stats);
+                    }
+                    
+                    // 新增：渲染记录统计
+                    if (recordStatsResult && recordStatsResult.success) {
+                        this.renderRecordStats(recordStatsResult.stats);
                     }
                 } catch (error) {
                     console.error('加载统计数据失败:', error);
@@ -2355,6 +2817,142 @@
                             plugins: {
                                 legend: {
                                     position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            
+            // 新增：渲染记录统计
+            renderRecordStats(stats) {
+                if (!stats) return;
+                
+                // 更新记录结果统计
+                if (stats.total_records !== undefined) {
+                    document.getElementById('totalRecordsCount').textContent = stats.total_records;
+                }
+                if (stats.win_count !== undefined) {
+                    document.getElementById('winRecordsCount').textContent = stats.win_count;
+                }
+                if (stats.loss_count !== undefined) {
+                    document.getElementById('lossRecordsCount').textContent = stats.loss_count;
+                }
+                if (stats.pending_count !== undefined) {
+                    document.getElementById('pendingRecordsCount').textContent = stats.pending_count;
+                }
+                
+                // 更新盘口类型统计
+                if (stats.handicap_types) {
+                    document.getElementById('asianHandicapCount').textContent = stats.handicap_types.asian || 0;
+                    document.getElementById('overUnderCount').textContent = stats.handicap_types.over_under || 0;
+                    
+                    // 绘制盘口类型饼图
+                    const ctx = document.getElementById('handicapTypeChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['让球盘', '大小盘'],
+                            datasets: [{
+                                data: [stats.handicap_types.asian || 0, stats.handicap_types.over_under || 0],
+                                backgroundColor: ['#36A2EB', '#FFCE56'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // 渲染水位分布
+                this.renderOddsDistribution(stats.odds_distribution);
+            },
+            
+            // 新增：渲染水位分布
+            renderOddsDistribution(oddsDistribution) {
+                if (!oddsDistribution) return;
+                
+                const container = document.getElementById('oddsDistribution');
+                if (!container) return;
+                
+                // 计算总数
+                const total = Object.values(oddsDistribution).reduce((sum, count) => sum + count, 0);
+                if (total === 0) {
+                    container.innerHTML = '<div class="empty-state"><i class="bi bi-bar-chart"></i><p>暂无水位分布数据</p></div>';
+                    return;
+                }
+                
+                // 渲染水位分布条形图
+                let html = '<div class="odds-distribution">';
+                
+                // 定义水位范围
+                const oddsRanges = [
+                    { label: '极低水位 (<0.80)', key: 'ultra_low', color: '#DC3545' },
+                    { label: '低水位 (0.80-0.89)', key: 'low', color: '#FD7E14' },
+                    { label: '中水位 (0.90-0.95)', key: 'medium', color: '#FFC107' },
+                    { label: '高水位 (0.96-1.00)', key: 'high', color: '#20C997' },
+                    { label: '超高水位 (>1.00)', key: 'ultra_high', color: '#0D6EFD' }
+                ];
+                
+                oddsRanges.forEach(range => {
+                    const count = oddsDistribution[range.key] || 0;
+                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                    
+                    html += `
+                        <div class="odds-bar">
+                            <div class="odds-label">${range.label}</div>
+                            <div class="odds-bar-inner">
+                                <div class="odds-fill" style="width: ${percentage}%; background-color: ${range.color};"></div>
+                            </div>
+                            <div class="odds-count" style="min-width: 60px; text-align: right;">
+                                ${count} (${percentage}%)
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+                
+                // 绘制水位分布柱状图
+                const ctx = document.getElementById('oddsDistributionChart').getContext('2d');
+                if (ctx) {
+                    const labels = oddsRanges.map(range => range.label);
+                    const data = oddsRanges.map(range => oddsDistribution[range.key] || 0);
+                    const colors = oddsRanges.map(range => range.color);
+                    
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '记录数量',
+                                data: data,
+                                backgroundColor: colors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
                                 }
                             }
                         }
