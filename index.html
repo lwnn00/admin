@@ -943,7 +943,7 @@
                 }
             })(),
             
-            // 管理员 API 端点映射
+            // 管理员 API 端点映射（已修复）
             ADMIN_ENDPOINTS: {
                 // 认证相关
                 login: '/api/login',
@@ -959,7 +959,7 @@
                 stats: '/api/admin/stats',
                 invitationStats: '/api/invitation-stats',
                 applicationStats: '/api/admin/applications/stats',
-                recordStats: '/api/admin/records/stats',
+                recordStats: '/api/admin/records/stats', // 新增：记录统计
                 
                 // 邀请码管理
                 invitations: '/api/admin/invitations',
@@ -967,7 +967,7 @@
                 generateCodes: '/api/admin/generate-codes',
                 validateCode: '/api/validate-code',
                 
-                // 申请管理
+                // 申请管理（已修复端点路径）
                 applications: '/api/admin/applications/all',
                 pendingApplications: '/api/admin/applications/pending',
                 applicationReview: (applicationId) => `/api/admin/applications/${applicationId}/review`,
@@ -1006,31 +1006,6 @@
                 name: '足球盘口管理系统',
                 version: '1.0.0',
                 adminEmail: 'admin@footballbetting.com'
-            },
-            
-            // 模拟数据配置
-            MOCK_DATA: {
-                enabled: true,
-                recordStats: {
-                    total_records: 1250,
-                    win_count: 680,
-                    loss_count: 420,
-                    pending_count: 150,
-                    handicap_types: {
-                        asian: 780,
-                        over_under: 470
-                    },
-                    odds_distribution: {
-                        ultra_low: 150,
-                        low: 320,
-                        medium: 450,
-                        high: 280,
-                        ultra_high: 50
-                    },
-                    win_rate: 54.4,
-                    average_odds: 0.92,
-                    most_common_handicap: 'asian'
-                }
             }
         };
 
@@ -1039,7 +1014,7 @@
             isAuthenticated: false,
             adminInfo: null,
             authToken: null,
-            currentEditingUserId: null,
+            currentEditingUserId: null, // 新增：当前编辑的用户ID
             
             init() {
                 this.authToken = localStorage.getItem('adminToken');
@@ -1107,7 +1082,6 @@
                     
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error(`API请求失败 ${response.status}:`, errorText);
                         throw new Error(`HTTP ${response.status}: ${errorText}`);
                     }
                     
@@ -1138,25 +1112,7 @@
             },
             
             async getStats() {
-                try {
-                    return await this.request(CONFIG.ADMIN_ENDPOINTS.stats);
-                } catch (error) {
-                    console.log('统计数据API不可用，使用模拟数据');
-                    return {
-                        success: true,
-                        stats: {
-                            total_users: 150,
-                            active_invites: 30,
-                            pending_apps: 5,
-                            total_records: 1250,
-                            weekly_trend: Array.from({length: 7}, (_, i) => ({
-                                date: new Date(Date.now() - (6-i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                                count: Math.floor(Math.random() * 10) + 5
-                            })),
-                            user_types: { admin: 2, registered: 80, trial: 68 }
-                        }
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.stats);
             },
             
             async getUsers(page = 1, limit = 20, search = '') {
@@ -1175,50 +1131,20 @@
                 return this.request(CONFIG.ADMIN_ENDPOINTS.userDetail(userId), 'DELETE');
             },
             
-            // 修改密码 - 使用mock数据如果API不存在
+            // 新增：修改密码
             async changePassword(userId, newPassword) {
-                try {
-                    return await this.request(CONFIG.ADMIN_ENDPOINTS.changePassword(userId), 'POST', {
-                        new_password: newPassword
-                    });
-                } catch (error) {
-                    console.log('修改密码API不可用，模拟成功');
-                    return {
-                        success: true,
-                        message: '密码修改成功（模拟）'
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.changePassword(userId), 'POST', {
+                    new_password: newPassword
+                });
             },
             
-            // 重置密码 - 使用mock数据如果API不存在
+            // 新增：重置密码
             async resetPassword(userId) {
-                try {
-                    return await this.request(CONFIG.ADMIN_ENDPOINTS.resetPassword(userId), 'POST');
-                } catch (error) {
-                    console.log('重置密码API不可用，模拟成功');
-                    return {
-                        success: true,
-                        message: '密码已重置，已发送邮件通知用户（模拟）'
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.resetPassword(userId), 'POST');
             },
             
             async getApplications(status = 'pending', page = 1, limit = 20) {
-                try {
-                    return await this.request(`${CONFIG.ADMIN_ENDPOINTS.applications}?status=${status}&page=${page}&limit=${limit}`);
-                } catch (error) {
-                    console.log('申请管理API不可用，使用模拟数据');
-                    return {
-                        success: true,
-                        applications: [],
-                        pagination: {
-                            page: 1,
-                            totalPages: 1,
-                            hasPrev: false,
-                            hasNext: false
-                        }
-                    };
-                }
+                return this.request(`${CONFIG.ADMIN_ENDPOINTS.applications}?status=${status}&page=${page}&limit=${limit}`);
             },
             
             async getApplicationDetail(applicationId) {
@@ -1263,110 +1189,28 @@
             async getRecords(page = 1, limit = 20, userId = null) {
                 let url = `${CONFIG.ADMIN_ENDPOINTS.records}?page=${page}&limit=${limit}`;
                 if (userId) url += `&userId=${userId}`;
-                
-                try {
-                    return await this.request(url);
-                } catch (error) {
-                    console.log('记录管理API不可用，使用模拟数据');
-                    return {
-                        success: true,
-                        records: [],
-                        pagination: {
-                            page: 1,
-                            totalPages: 1,
-                            hasPrev: false,
-                            hasNext: false
-                        }
-                    };
-                }
+                return this.request(url);
             },
             
-            // 获取记录统计 - 完全重写，确保不会出错
+            // 新增：获取记录统计
             async getRecordStats() {
-                // 如果模拟数据启用，直接返回模拟数据
-                if (CONFIG.MOCK_DATA.enabled) {
-                    console.log('使用模拟记录统计数据');
-                    return {
-                        success: true,
-                        stats: CONFIG.MOCK_DATA.recordStats
-                    };
-                }
-                
-                // 否则尝试调用API
-                try {
-                    const result = await this.request(CONFIG.ADMIN_ENDPOINTS.recordStats);
-                    return result;
-                } catch (error) {
-                    // 如果API失败，也返回模拟数据
-                    console.log('记录统计API不可用，使用模拟数据');
-                    return {
-                        success: true,
-                        stats: CONFIG.MOCK_DATA.recordStats
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.recordStats);
             },
             
             async getLogs(page = 1, limit = 50) {
-                try {
-                    return await this.request(`${CONFIG.ADMIN_ENDPOINTS.logs}?page=${page}&limit=${limit}`);
-                } catch (error) {
-                    console.log('日志API不可用，使用模拟数据');
-                    return {
-                        success: true,
-                        logs: [],
-                        pagination: {
-                            page: 1,
-                            totalPages: 1,
-                            hasPrev: false,
-                            hasNext: false
-                        }
-                    };
-                }
+                return this.request(`${CONFIG.ADMIN_ENDPOINTS.logs}?page=${page}&limit=${limit}`);
             },
             
             async getSettings() {
-                try {
-                    return await this.request(CONFIG.ADMIN_ENDPOINTS.settings);
-                } catch (error) {
-                    console.log('设置API不可用，返回默认设置');
-                    return {
-                        success: true,
-                        settings: {
-                            max_trial_count: 18,
-                            trial_expiry_days: 30,
-                            registration_enabled: true,
-                            invitation_code_expiry_days: 30,
-                            default_max_uses: 1,
-                            max_generate_count: 100,
-                            maintenance_mode: false,
-                            data_retention_days: 365
-                        }
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.settings);
             },
             
             async updateSettings(data) {
-                try {
-                    return await this.request(CONFIG.ADMIN_ENDPOINTS.settings, 'PUT', data);
-                } catch (error) {
-                    console.log('更新设置API不可用，模拟成功');
-                    return {
-                        success: true,
-                        message: '系统设置已保存（模拟）'
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.settings, 'PUT', data);
             },
             
             async repairTables() {
-                try {
-                    return await this.request(CONFIG.ADMIN_ENDPOINTS.repairTables, 'POST');
-                } catch (error) {
-                    console.log('修复表API不可用，模拟成功');
-                    return {
-                        success: true,
-                        message: '数据库表修复成功（模拟）'
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.repairTables, 'POST');
             }
         };
 
@@ -1472,15 +1316,7 @@
                     }
                 } catch (error) {
                     console.error('加载控制面板失败:', error);
-                    AdminUI.showToast('加载统计信息失败，使用模拟数据', 'warning');
-                    
-                    // 使用模拟数据
-                    this.updateStats({
-                        total_users: 150,
-                        active_invites: 30,
-                        pending_apps: 5,
-                        total_records: 1250
-                    });
+                    AdminUI.showToast('加载统计信息失败', 'danger');
                 }
             },
             
@@ -1551,12 +1387,6 @@
                     }
                 } catch (error) {
                     console.error('加载最近活动失败:', error);
-                    activityDiv.innerHTML = `
-                        <div class="empty-state">
-                            <i class="bi bi-activity"></i>
-                            <p>暂无活动记录</p>
-                        </div>
-                    `;
                 }
             },
             
@@ -1767,7 +1597,7 @@
             async showUserDetail(userId) {
                 try {
                     AdminUI.showLoading();
-                    AdminState.currentEditingUserId = userId;
+                    AdminState.currentEditingUserId = userId; // 保存当前编辑的用户ID
                     const result = await AdminAPI.getUserDetail(userId);
                     
                     if (result.success) {
@@ -1872,7 +1702,7 @@
                                     AdminUI.showToast('用户信息更新成功', 'success');
                                     // 刷新用户列表
                                     const search = document.getElementById('userSearch').value;
-                                    const currentPage = 1;
+                                    const currentPage = 1; // 回到第一页
                                     this.loadUsers(currentPage, search);
                                 }
                             } catch (error) {
@@ -2036,7 +1866,7 @@
                         AdminUI.showToast('用户删除成功', 'success');
                         // 刷新用户列表
                         const search = document.getElementById('userSearch').value;
-                        const currentPage = 1;
+                        const currentPage = 1; // 回到第一页
                         this.loadUsers(currentPage, search);
                     }
                 } catch (error) {
@@ -2779,7 +2609,7 @@
                                 </div>
                             </div>
                             
-                            <!-- 用户记录内容统计 -->
+                            <!-- 新增：用户记录内容统计 -->
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <div class="card">
@@ -2905,54 +2735,27 @@
                 
                 // 加载统计数据并绘制图表
                 try {
-                    // 使用Promise.allSettled而不是Promise.all，这样单个API失败不会影响其他
-                    const [statsResult, inviteStatsResult, recordStatsResult] = await Promise.allSettled([
+                    const [statsResult, inviteStatsResult, recordStatsResult] = await Promise.all([
                         AdminAPI.getStats(),
-                        AdminAPI.request(CONFIG.ADMIN_ENDPOINTS.invitationStats).catch(() => ({ success: true, stats: { codes: { total: 100, active: 30, total_used: 70 } } })),
-                        AdminAPI.getRecordStats()
+                        AdminAPI.request(CONFIG.ADMIN_ENDPOINTS.invitationStats),
+                        AdminAPI.getRecordStats() // 新增：加载记录统计
                     ]);
                     
-                    // 处理用户增长和类型分布
-                    if (statsResult.status === 'fulfilled' && statsResult.value.success) {
-                        this.renderStatisticsCharts(statsResult.value.stats);
-                    } else {
-                        this.renderStatisticsCharts({
-                            weekly_trend: [],
-                            user_types: { admin: 1, registered: 50, trial: 100 }
-                        });
+                    if (statsResult.success) {
+                        this.renderStatisticsCharts(statsResult.stats);
                     }
                     
-                    // 处理邀请码统计
-                    if (inviteStatsResult.status === 'fulfilled' && inviteStatsResult.value.success) {
-                        this.renderInvitationStats(inviteStatsResult.value.stats);
-                    } else {
-                        this.renderInvitationStats({
-                            codes: { total: 100, active: 30, total_used: 70 }
-                        });
+                    if (inviteStatsResult.success) {
+                        this.renderInvitationStats(inviteStatsResult.stats);
                     }
                     
-                    // 处理记录统计
-                    if (recordStatsResult.status === 'fulfilled' && recordStatsResult.value.success) {
-                        this.renderRecordStats(recordStatsResult.value.stats);
-                    } else {
-                        this.renderRecordStats(CONFIG.MOCK_DATA.recordStats);
+                    // 新增：渲染记录统计
+                    if (recordStatsResult && recordStatsResult.success) {
+                        this.renderRecordStats(recordStatsResult.stats);
                     }
-                    
                 } catch (error) {
                     console.error('加载统计数据失败:', error);
-                    this.showToast('加载统计数据失败，使用模拟数据', 'warning');
-                    
-                    // 使用模拟数据
-                    this.renderStatisticsCharts({
-                        weekly_trend: [],
-                        user_types: { admin: 1, registered: 50, trial: 100 }
-                    });
-                    
-                    this.renderInvitationStats({
-                        codes: { total: 100, active: 30, total_used: 70 }
-                    });
-                    
-                    this.renderRecordStats(CONFIG.MOCK_DATA.recordStats);
+                    this.showToast('加载统计数据失败', 'danger');
                 }
             },
             
@@ -2970,35 +2773,6 @@
                             datasets: [{
                                 label: '新增用户数',
                                 data: counts,
-                                borderColor: 'rgb(75, 192, 192)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        precision: 0
-                                    }
-                                }
-                            }
-                        }
-                    });
-                } else {
-                    // 如果没有数据，显示空图表
-                    const ctx1 = document.getElementById('userGrowthChart').getContext('2d');
-                    new Chart(ctx1, {
-                        type: 'line',
-                        data: {
-                            labels: ['暂无数据'],
-                            datasets: [{
-                                label: '新增用户数',
-                                data: [0],
                                 borderColor: 'rgb(75, 192, 192)',
                                 backgroundColor: 'rgba(75, 192, 192, 0.1)',
                                 tension: 0.4,
@@ -3050,34 +2824,37 @@
                 }
             },
             
-            // 渲染记录统计
+            // 新增：渲染记录统计
             renderRecordStats(stats) {
-                if (!stats) {
-                    stats = CONFIG.MOCK_DATA.recordStats;
-                }
+                if (!stats) return;
                 
                 // 更新记录结果统计
-                document.getElementById('totalRecordsCount').textContent = stats.total_records || 0;
-                document.getElementById('winRecordsCount').textContent = stats.win_count || 0;
-                document.getElementById('lossRecordsCount').textContent = stats.loss_count || 0;
-                document.getElementById('pendingRecordsCount').textContent = stats.pending_count || 0;
+                if (stats.total_records !== undefined) {
+                    document.getElementById('totalRecordsCount').textContent = stats.total_records;
+                }
+                if (stats.win_count !== undefined) {
+                    document.getElementById('winRecordsCount').textContent = stats.win_count;
+                }
+                if (stats.loss_count !== undefined) {
+                    document.getElementById('lossRecordsCount').textContent = stats.loss_count;
+                }
+                if (stats.pending_count !== undefined) {
+                    document.getElementById('pendingRecordsCount').textContent = stats.pending_count;
+                }
                 
                 // 更新盘口类型统计
-                document.getElementById('asianHandicapCount').textContent = (stats.handicap_types && stats.handicap_types.asian) || 0;
-                document.getElementById('overUnderCount').textContent = (stats.handicap_types && stats.handicap_types.over_under) || 0;
-                
-                // 绘制盘口类型饼图
-                const ctx = document.getElementById('handicapTypeChart').getContext('2d');
-                if (ctx) {
+                if (stats.handicap_types) {
+                    document.getElementById('asianHandicapCount').textContent = stats.handicap_types.asian || 0;
+                    document.getElementById('overUnderCount').textContent = stats.handicap_types.over_under || 0;
+                    
+                    // 绘制盘口类型饼图
+                    const ctx = document.getElementById('handicapTypeChart').getContext('2d');
                     new Chart(ctx, {
                         type: 'pie',
                         data: {
                             labels: ['让球盘', '大小盘'],
                             datasets: [{
-                                data: [
-                                    (stats.handicap_types && stats.handicap_types.asian) || 0,
-                                    (stats.handicap_types && stats.handicap_types.over_under) || 0
-                                ],
+                                data: [stats.handicap_types.asian || 0, stats.handicap_types.over_under || 0],
                                 backgroundColor: ['#36A2EB', '#FFCE56'],
                                 borderWidth: 1
                             }]
@@ -3098,11 +2875,9 @@
                 this.renderOddsDistribution(stats.odds_distribution);
             },
             
-            // 渲染水位分布
+            // 新增：渲染水位分布
             renderOddsDistribution(oddsDistribution) {
-                if (!oddsDistribution) {
-                    oddsDistribution = CONFIG.MOCK_DATA.recordStats.odds_distribution;
-                }
+                if (!oddsDistribution) return;
                 
                 const container = document.getElementById('oddsDistribution');
                 if (!container) return;
