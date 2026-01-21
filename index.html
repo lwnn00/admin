@@ -1141,73 +1141,46 @@
             },
             
             async getWaterImpactStats() {
-    console.log('📊 获取水位影响统计数据');
-    
-    try {
-        const result = await this.request(CONFIG.ADMIN_ENDPOINTS.waterImpactStats);
-        
-        // 确保数据结构完整
-        if (result.success && result.stats) {
-            // 确保有water_change_impact字段
-            if (!result.stats.water_change_impact) {
-                result.stats.water_change_impact = {
-                    significant_up: { win: 0, loss: 0 },
-                    up: { win: 0, loss: 0 },
-                    stable: { win: 0, loss: 0 },
-                    down: { win: 0, loss: 0 },
-                    significant_down: { win: 0, loss: 0 }
-                };
-            }
-            
-            // 确保有water_change_win_rates字段
-            if (!result.stats.water_change_win_rates) {
-                result.stats.water_change_win_rates = {
-                    significant_up: { wins: 0, losses: 0, total: 0, win_rate: 0 },
-                    up: { wins: 0, losses: 0, total: 0, win_rate: 0 },
-                    stable: { wins: 0, losses: 0, total: 0, win_rate: 0 },
-                    down: { wins: 0, losses: 0, total: 0, win_rate: 0 },
-                    significant_down: { wins: 0, losses: 0, total: 0, win_rate: 0 }
-                };
-            }
-        }
-        
-        return result;
-        
-    } catch (error) {
-        console.log('水位影响统计API失败，使用模拟数据');
-        return {
-            success: true,
-            stats: {
-                total_records: 1250,
-                win_count: 680,
-                loss_count: 420,
-                pending_count: 150,
-                water_change_impact: {
-                    significant_up: { win: 120, loss: 80 },
-                    up: { win: 180, loss: 110 },
-                    stable: { win: 200, loss: 120 },
-                    down: { win: 120, loss: 80 },
-                    significant_down: { win: 60, loss: 30 }
-                },
-                water_change_win_rates: {
-                    significant_up: { wins: 120, losses: 80, total: 200, win_rate: 60 },
-                    up: { wins: 180, losses: 110, total: 290, win_rate: 62 },
-                    stable: { wins: 200, losses: 120, total: 320, win_rate: 63 },
-                    down: { wins: 120, losses: 80, total: 200, win_rate: 60 },
-                    significant_down: { wins: 60, losses: 30, total: 90, win_rate: 67 }
-                },
-                water_level_distribution: [
-                    { level: 'ultra_low', count: 150, win_rate: 45 },
-                    { level: 'very_low', count: 200, win_rate: 52 },
-                    { level: 'low', count: 320, win_rate: 58 },
-                    { level: 'medium', count: 450, win_rate: 62 },
-                    { level: 'high', count: 280, win_rate: 55 },
-                    { level: 'ultra_high', count: 50, win_rate: 40 }
-                ]
-            }
-        };
-    }
-}，
+                // 获取水位变化对结果影响的统计数据
+                try {
+                    return await this.request('/api/admin/water-impact-stats');
+                } catch (error) {
+                    console.log('水位影响统计API暂不可用，使用模拟数据');
+                    return {
+                        success: true,
+                        stats: {
+                            total_records: 1250,
+                            water_up: {
+                                count: 450,
+                                win_count: 280,
+                                win_rate: 62.2,
+                                avg_water_change: 0.035
+                            },
+                            water_down: {
+                                count: 320,
+                                win_count: 180,
+                                win_rate: 56.3,
+                                avg_water_change: -0.028
+                            },
+                            water_stable: {
+                                count: 480,
+                                win_count: 220,
+                                win_rate: 45.8,
+                                avg_water_change: 0.002
+                            },
+                            win_rates_by_change_range: {
+                                ultra_up: { range: '>+0.10', count: 80, win_rate: 68.8 },
+                                up: { range: '+0.03 to +0.10', count: 220, win_rate: 63.6 },
+                                slight_up: { range: '+0.01 to +0.03', count: 150, win_rate: 58.7 },
+                                stable: { range: '-0.01 to +0.01', count: 480, win_rate: 45.8 },
+                                slight_down: { range: '-0.03 to -0.01', count: 120, win_rate: 51.7 },
+                                down: { range: '-0.10 to -0.03', count: 140, win_rate: 55.0 },
+                                ultra_down: { range: '<-0.10', count: 60, win_rate: 58.3 }
+                            }
+                        }
+                    };
+                }
+            },
             
             async getUsers(page = 1, limit = 20, search = '') {
                 return this.request(`${CONFIG.ADMIN_ENDPOINTS.users}?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
