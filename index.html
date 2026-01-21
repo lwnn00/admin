@@ -434,6 +434,23 @@
         .low-win-rate {
             color: #dc3545;
         }
+        
+        /* 错误状态样式 */
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #dc3545;
+        }
+        
+        .error-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dc3545;
+        }
+        
+        .error-state .btn {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -1571,6 +1588,9 @@
                     }
                 } catch (error) {
                     console.error('加载用户失败:', error);
+                    this.showErrorState('usersTableBody', '加载用户数据失败，请稍后重试', 'usersPagination', () => {
+                        this.loadUsers(page, search);
+                    });
                     this.showToast('加载用户数据失败', 'danger');
                 }
             },
@@ -1982,6 +2002,9 @@
                     }
                 } catch (error) {
                     console.error('加载申请失败:', error);
+                    this.showErrorState('applicationsTableBody', '加载申请数据失败，请稍后重试', 'applicationsPagination', () => {
+                        this.loadApplications(status);
+                    });
                     this.showToast('加载申请数据失败', 'danger');
                 }
             },
@@ -2237,6 +2260,9 @@
                     }
                 } catch (error) {
                     console.error('加载邀请码失败:', error);
+                    this.showErrorState('invitationsTableBody', '加载邀请码数据失败，请稍后重试', 'invitationsPagination', () => {
+                        this.loadInvitations(status);
+                    });
                     this.showToast('加载邀请码数据失败', 'danger');
                 }
             },
@@ -2417,6 +2443,7 @@
                 }
             },
             
+            // 加载记录数据
             async loadRecords(page = 1) {
                 const contentDiv = document.getElementById('recordsContent');
                 contentDiv.innerHTML = `
@@ -2480,7 +2507,36 @@
                     }
                 } catch (error) {
                     console.error('加载记录失败:', error);
+                    this.showErrorState('recordsTableBody', '加载记录数据失败，请稍后重试', 'recordsPagination', () => {
+                        this.loadRecords(page);
+                    });
                     this.showToast('加载记录数据失败', 'danger');
+                }
+            },
+            
+            // 显示错误状态
+            showErrorState(tableBodyId, errorMessage, paginationId, retryCallback) {
+                const tbody = document.getElementById(tableBodyId);
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="11" class="text-center py-4">
+                                <div class="error-state">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <p class="mt-2">${errorMessage}</p>
+                                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="${retryCallback.name}(${retryCallback.arguments ? retryCallback.arguments[0] : ''})">
+                                        重新加载
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                // 清空分页
+                const paginationContainer = document.getElementById(paginationId);
+                if (paginationContainer) {
+                    paginationContainer.innerHTML = '';
                 }
             },
             
@@ -2490,8 +2546,10 @@
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="11" class="text-center py-4">
-                                <i class="bi bi-clipboard-data display-6 text-muted"></i>
-                                <p class="mt-2 text-muted">暂无记录数据</p>
+                                <div class="empty-state">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    <p class="mt-2 text-muted">暂无记录数据</p>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -2501,18 +2559,14 @@
                 tbody.innerHTML = records.map(record => {
                     // 水位变化标识
                     let oddsChangeBadge = '';
-                    let oddsChangeText = '';
                     
                     if (record.initial_odds !== undefined && record.final_odds !== undefined) {
                         if (record.final_odds > record.initial_odds) {
                             oddsChangeBadge = '<span class="odds-change-badge odds-up"><i class="bi bi-arrow-up"></i> 上升</span>';
-                            oddsChangeText = '上升';
                         } else if (record.final_odds < record.initial_odds) {
                             oddsChangeBadge = '<span class="odds-change-badge odds-down"><i class="bi bi-arrow-down"></i> 下降</span>';
-                            oddsChangeText = '下降';
                         } else {
                             oddsChangeBadge = '<span class="odds-change-badge odds-stable"><i class="bi bi-dash"></i> 稳定</span>';
-                            oddsChangeText = '稳定';
                         }
                     }
                     
@@ -2702,6 +2756,9 @@
                     }
                 } catch (error) {
                     console.error('加载日志失败:', error);
+                    this.showErrorState('logsTableBody', '加载日志数据失败，请稍后重试', 'logsPagination', () => {
+                        this.loadLogs(page);
+                    });
                     this.showToast('加载日志数据失败', 'danger');
                 }
             },
