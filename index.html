@@ -982,7 +982,7 @@
                 applicationStats: '/api/admin/applications/stats',
                 waterImpactStats: '/api/admin/water-impact-stats', // 修改为新的端点
                 recordStats: '/api/admin/records/stats', // 保持原样，但确保后端有这个端点
-                waterImpactStats: '/api/admin/stats/water-impact',
+                
                 
                 recordStats: '/api/admin/water-impact-stats', // 也可以指向同一个端点
                 // 邀请码管理
@@ -1143,7 +1143,7 @@
             async getWaterImpactStats() {
                 // 获取水位变化对结果影响的统计数据
                 try {
-                    return await this.request(CONFIG.ADMIN_ENDPOINTS.waterImpactStats);
+                    return await this.request('/api/admin/water-impact-stats');
                 } catch (error) {
                     console.log('水位影响统计API暂不可用，使用模拟数据');
                     return {
