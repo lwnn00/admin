@@ -1259,15 +1259,19 @@
                 return this.request(url);
             },
             
-            // 获取记录统计（带错误处理）
-           async getRecordStats() {
+           // 获取记录统计（修改现有的getRecordStats函数）
+async getRecordStats() {
     try {
-        // 尝试获取新的水位影响统计
-        const result = await this.request(CONFIG.ADMIN_ENDPOINTS.waterImpactStats || CONFIG.ADMIN_ENDPOINTS.recordStats);
+        // 优先使用新的水位影响统计API
+        if (CONFIG.ADMIN_ENDPOINTS.waterImpactStats) {
+            return this.request(CONFIG.ADMIN_ENDPOINTS.waterImpactStats);
+        }
+        // 回退到旧的记录统计API
+        const result = await this.request(CONFIG.ADMIN_ENDPOINTS.recordStats);
         return result;
     } catch (error) {
         // 如果API不存在，返回模拟数据
-        console.log('记录统计API暂不可用，使用模拟数据');
+        console.log('水位影响统计API暂不可用，使用模拟数据');
         return {
             success: true,
             stats: {
@@ -1297,7 +1301,6 @@
         };
     }
 },
-            
             async getLogs(page = 1, limit = 50) {
                 return this.request(`${CONFIG.ADMIN_ENDPOINTS.logs}?page=${page}&limit=${limit}`);
             },
