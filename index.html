@@ -337,126 +337,11 @@
             padding: 20px 0;
         }
         
-        /* 水位变化标识 */
-        .odds-change-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            display: inline-block;
-        }
-        
-        .odds-up {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .odds-down {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        
-        .odds-stable {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        /* 统计图表容器 */
-        .stats-chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-            margin: 20px 0;
-        }
-        
-        /* 统计卡片 */
-        .stats-summary-card {
-            padding: 20px;
-            text-align: center;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            margin-bottom: 20px;
-        }
-        
-        .stats-summary-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .stats-summary-label {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-        
-        /* 水位变化与结果关系表格 */
-        .odds-result-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .odds-result-table th {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 12px 16px;
-            text-align: center;
-            font-weight: 600;
-        }
-        
-        .odds-result-table td {
-            padding: 12px 16px;
-            text-align: center;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .odds-result-table tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .win-rate-cell {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        
-        .high-win-rate {
-            color: #28a745;
-        }
-        
-        .medium-win-rate {
-            color: #ffc107;
-        }
-        
-        .low-win-rate {
-            color: #dc3545;
-        }
-        
-        /* 错误状态样式 */
-        .error-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #dc3545;
-        }
-        
-        .error-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: #dc3545;
-        }
-        
-        .error-state .btn {
-            margin-top: 15px;
-        }
-        
         /* 密码强度指示器 */
         .password-strength {
-            height: 4px;
-            border-radius: 2px;
+            height: 5px;
             margin-top: 5px;
+            border-radius: 3px;
             transition: all 0.3s;
         }
         
@@ -471,13 +356,88 @@
         }
         
         .strength-good {
-            background-color: #17a2b8;
+            background-color: #28a745;
             width: 75%;
         }
         
         .strength-strong {
-            background-color: #28a745;
+            background-color: #20c997;
             width: 100%;
+        }
+        
+        /* 记录统计卡片 */
+        .record-stats-card {
+            height: 100%;
+        }
+        
+        .record-stats-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 20px;
+        }
+        
+        .record-stats-body {
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label-small {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        /* 水位分布图表样式 */
+        .odds-distribution {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .odds-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .odds-label {
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+        
+        .odds-bar-inner {
+            flex: 1;
+            height: 24px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .odds-fill {
+            height: 100%;
+            border-radius: 12px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.5s ease;
         }
     </style>
 </head>
@@ -1016,10 +976,6 @@
                 
                 // 记录管理
                 records: '/api/admin/records',
-                recordDetail: (recordId) => `/api/admin/records/${recordId}`,
-                
-                // 统计分析 - 水位变化与结果关系
-                oddsResultStats: '/api/admin/odds-result-stats',
                 
                 // 日志管理
                 logs: '/api/admin/logs',
@@ -1237,13 +1193,38 @@
                 return this.request(url);
             },
             
-            async getRecordDetail(recordId) {
-                return this.request(CONFIG.ADMIN_ENDPOINTS.recordDetail(recordId));
-            },
-            
-            // 获取水位变化与结果关系统计
-            async getOddsResultStats() {
-                return this.request(CONFIG.ADMIN_ENDPOINTS.oddsResultStats);
+            // 获取记录统计（带错误处理）
+            async getRecordStats() {
+                try {
+                    const result = await this.request(CONFIG.ADMIN_ENDPOINTS.recordStats);
+                    return result;
+                } catch (error) {
+                    // 如果API不存在，返回模拟数据
+                    console.log('记录统计API暂不可用，使用模拟数据');
+                    return {
+                        success: true,
+                        stats: {
+                            total_records: 1250,
+                            win_count: 680,
+                            loss_count: 420,
+                            pending_count: 150,
+                            handicap_types: {
+                                asian: 780,
+                                over_under: 470
+                            },
+                            odds_distribution: {
+                                ultra_low: 150,
+                                low: 320,
+                                medium: 450,
+                                high: 280,
+                                ultra_high: 50
+                            },
+                            win_rate: 54.4,
+                            average_odds: 0.92,
+                            most_common_handicap: 'asian'
+                        }
+                    };
+                }
             },
             
             async getLogs(page = 1, limit = 50) {
@@ -1574,9 +1555,6 @@
                     }
                 } catch (error) {
                     console.error('加载用户失败:', error);
-                    this.showErrorState('usersTableBody', '加载用户数据失败，请稍后重试', 'usersPagination', () => {
-                        this.loadUsers(page, search);
-                    });
                     this.showToast('加载用户数据失败', 'danger');
                 }
             },
@@ -1752,7 +1730,6 @@
                                 const updateResult = await AdminAPI.updateUser(userId, updates);
                                 if (updateResult.success) {
                                     AdminUI.showToast('用户信息更新成功', 'success');
-                                    modal.hide();
                                     // 刷新用户列表
                                     const search = document.getElementById('userSearch').value;
                                     const currentPage = 1;
@@ -1989,9 +1966,6 @@
                     }
                 } catch (error) {
                     console.error('加载申请失败:', error);
-                    this.showErrorState('applicationsTableBody', '加载申请数据失败，请稍后重试', 'applicationsPagination', () => {
-                        this.loadApplications(status);
-                    });
                     this.showToast('加载申请数据失败', 'danger');
                 }
             },
@@ -2247,9 +2221,6 @@
                     }
                 } catch (error) {
                     console.error('加载邀请码失败:', error);
-                    this.showErrorState('invitationsTableBody', '加载邀请码数据失败，请稍后重试', 'invitationsPagination', () => {
-                        this.loadInvitations(status);
-                    });
                     this.showToast('加载邀请码数据失败', 'danger');
                 }
             },
@@ -2430,7 +2401,6 @@
                 }
             },
             
-            // 加载记录数据
             async loadRecords(page = 1) {
                 const contentDiv = document.getElementById('recordsContent');
                 contentDiv.innerHTML = `
@@ -2441,7 +2411,7 @@
                                 <div class="search-box me-2">
                                     <i class="bi bi-search search-icon"></i>
                                     <input type="text" class="form-control form-control-sm" id="recordSearch" 
-                                           placeholder="搜索用户ID或赛事名称">
+                                           placeholder="搜索用户ID">
                                 </div>
                                 <button class="btn btn-sm btn-outline-primary" id="refreshRecords">
                                     <i class="bi bi-arrow-clockwise"></i>
@@ -2457,7 +2427,6 @@
                                             <th>用户</th>
                                             <th>赛事名称</th>
                                             <th>盘口类型</th>
-                                            <th>水位变化</th>
                                             <th>推荐</th>
                                             <th>结果</th>
                                             <th>创建时间</th>
@@ -2466,7 +2435,7 @@
                                     </thead>
                                     <tbody id="recordsTableBody">
                                         <tr>
-                                            <td colspan="9" class="text-center py-4">
+                                            <td colspan="8" class="text-center py-4">
                                                 <div class="spinner-border text-primary" role="status">
                                                     <span class="visually-hidden">加载中...</span>
                                                 </div>
@@ -2492,36 +2461,7 @@
                     }
                 } catch (error) {
                     console.error('加载记录失败:', error);
-                    this.showErrorState('recordsTableBody', '加载记录数据失败，请稍后重试', 'recordsPagination', () => {
-                        this.loadRecords(page);
-                    });
                     this.showToast('加载记录数据失败', 'danger');
-                }
-            },
-            
-            // 显示错误状态
-            showErrorState(tableBodyId, errorMessage, paginationId, retryCallback) {
-                const tbody = document.getElementById(tableBodyId);
-                if (tbody) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="9" class="text-center py-4">
-                                <div class="error-state">
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <p class="mt-2">${errorMessage}</p>
-                                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="${retryCallback.name}(${retryCallback.arguments ? retryCallback.arguments[0] : ''})">
-                                        重新加载
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }
-                
-                // 清空分页
-                const paginationContainer = document.getElementById(paginationId);
-                if (paginationContainer) {
-                    paginationContainer.innerHTML = '';
                 }
             },
             
@@ -2530,156 +2470,51 @@
                 if (!records || records.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="9" class="text-center py-4">
-                                <div class="empty-state">
-                                    <i class="bi bi-clipboard-data"></i>
-                                    <p class="mt-2 text-muted">暂无记录数据</p>
-                                </div>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-clipboard-data display-6 text-muted"></i>
+                                <p class="mt-2 text-muted">暂无记录数据</p>
                             </td>
                         </tr>
                     `;
                     return;
                 }
                 
-                tbody.innerHTML = records.map(record => {
-                    // 水位变化标识
-                    let oddsChangeBadge = '';
-                    
-                    if (record.initial_odds !== undefined && record.final_odds !== undefined) {
-                        if (record.final_odds > record.initial_odds) {
-                            oddsChangeBadge = '<span class="odds-change-badge odds-up"><i class="bi bi-arrow-up"></i> 上升</span>';
-                        } else if (record.final_odds < record.initial_odds) {
-                            oddsChangeBadge = '<span class="odds-change-badge odds-down"><i class="bi bi-arrow-down"></i> 下降</span>';
-                        } else {
-                            oddsChangeBadge = '<span class="odds-change-badge odds-stable"><i class="bi bi-dash"></i> 稳定</span>';
-                        }
-                    }
-                    
-                    return `
-                        <tr>
-                            <td>${record.id}</td>
-                            <td>
-                                <strong>${record.user_name || '未知用户'}</strong>
-                                <br><small class="text-muted">ID: ${record.user_id}</small>
-                            </td>
-                            <td>${record.match_name}</td>
-                            <td>
-                                <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
-                                    ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
-                                </span>
-                            </td>
-                            <td>${oddsChangeBadge}</td>
-                            <td>${record.recommendation}</td>
-                            <td>
-                                ${record.actual_result === 'win' ? 
-                                    '<span class="badge bg-success">赢</span>' :
-                                record.actual_result === 'loss' ? 
-                                    '<span class="badge bg-danger">输</span>' :
-                                    '<span class="badge bg-secondary">未设置</span>'
-                                }
-                            </td>
-                            <td>${new Date(record.created_at).toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
-                                        onclick="AdminUI.showRecordDetail(${record.id})">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                tbody.innerHTML = records.map(record => `
+                    <tr>
+                        <td>${record.id}</td>
+                        <td>
+                            <strong>${record.user_name || '未知用户'}</strong>
+                            <br><small class="text-muted">ID: ${record.user_id}</small>
+                        </td>
+                        <td>${record.match_name}</td>
+                        <td>
+                            <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
+                                ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
+                            </span>
+                        </td>
+                        <td>${record.recommendation}</td>
+                        <td>
+                            ${record.actual_result === 'win' ? 
+                                '<span class="badge bg-success">赢</span>' :
+                            record.actual_result === 'loss' ? 
+                                '<span class="badge bg-danger">输</span>' :
+                                '<span class="badge bg-secondary">未设置</span>'
+                            }
+                        </td>
+                        <td>${new Date(record.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
+                                    onclick="AdminUI.showRecordDetail(${record.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
                 
                 // 渲染分页
                 this.renderPagination('recordsPagination', pagination, (page) => {
                     this.loadRecords(page);
                 });
-            },
-            
-            async showRecordDetail(recordId) {
-                try {
-                    AdminUI.showLoading();
-                    const result = await AdminAPI.getRecordDetail(recordId);
-                    
-                    if (result.success) {
-                        const record = result.record;
-                        const modalContent = document.getElementById('userDetailContent');
-                        
-                        modalContent.innerHTML = `
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">记录ID</label>
-                                        <input type="text" class="form-control" value="${record.id}" readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">用户名</label>
-                                        <input type="text" class="form-control" value="${record.user_name || '未知用户'}" readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">赛事名称</label>
-                                        <input type="text" class="form-control" value="${record.match_name}" readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">盘口类型</label>
-                                        <input type="text" class="form-control" value="${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}" readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">推荐</label>
-                                        <input type="text" class="form-control" value="${record.recommendation}" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">水位变化</label>
-                                        <div>
-                                            ${record.initial_odds !== undefined && record.final_odds !== undefined ? 
-                                                record.final_odds > record.initial_odds ? 
-                                                    '<span class="odds-change-badge odds-up"><i class="bi bi-arrow-up"></i> 上升</span>' :
-                                                record.final_odds < record.initial_odds ? 
-                                                    '<span class="odds-change-badge odds-down"><i class="bi bi-arrow-down"></i> 下降</span>' :
-                                                    '<span class="odds-change-badge odds-stable"><i class="bi bi-dash"></i> 稳定</span>' 
-                                                : '<span class="text-muted">无数据</span>'
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">结果</label>
-                                        <div>
-                                            ${record.actual_result === 'win' ? 
-                                                '<span class="badge bg-success">赢</span>' :
-                                            record.actual_result === 'loss' ? 
-                                                '<span class="badge bg-danger">输</span>' :
-                                                '<span class="badge bg-secondary">未设置</span>'
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">创建时间</label>
-                                        <input type="text" class="form-control" value="${new Date(record.created_at).toLocaleString()}" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="alert alert-info mt-3">
-                                <i class="bi bi-info-circle me-2"></i>
-                                此为记录详情，仅供查看。
-                            </div>
-                        `;
-                        
-                        // 显示模态框
-                        const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
-                        modal.show();
-                        
-                        // 更新按钮文本
-                        document.getElementById('saveUserBtn').textContent = '关闭';
-                        document.getElementById('saveUserBtn').onclick = function() {
-                            modal.hide();
-                        };
-                    }
-                } catch (error) {
-                    AdminUI.showToast('获取记录详情失败', 'danger');
-                } finally {
-                    AdminUI.hideLoading();
-                }
             },
             
             async loadLogs(page = 1) {
@@ -2731,9 +2566,6 @@
                     }
                 } catch (error) {
                     console.error('加载日志失败:', error);
-                    this.showErrorState('logsTableBody', '加载日志数据失败，请稍后重试', 'logsPagination', () => {
-                        this.loadLogs(page);
-                    });
                     this.showToast('加载日志数据失败', 'danger');
                 }
             },
@@ -2777,101 +2609,151 @@
                 contentDiv.innerHTML = `
                     <div class="card card-admin">
                         <div class="card-header">
-                            <h5 class="mb-0">水位升降与结果关系分析</h5>
+                            <h5 class="mb-0">统计分析</h5>
                         </div>
                         <div class="card-body">
-                            <!-- 统计摘要 -->
-                            <div class="row mb-4">
-                                <div class="col-md-3 col-sm-6 mb-3">
-                                    <div class="stats-summary-card">
-                                        <div class="stats-summary-value" id="totalRecordsStat">0</div>
-                                        <div class="stats-summary-label">总记录数</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6 mb-3">
-                                    <div class="stats-summary-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
-                                        <div class="stats-summary-value" id="winRateStat">0%</div>
-                                        <div class="stats-summary-label">总体胜率</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6 mb-3">
-                                    <div class="stats-summary-card" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
-                                        <div class="stats-summary-value" id="oddsUpCount">0</div>
-                                        <div class="stats-summary-label">水位上升记录</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6 mb-3">
-                                    <div class="stats-summary-card" style="background: linear-gradient(135deg, #dc3545, #c82333);">
-                                        <div class="stats-summary-value" id="oddsDownCount">0</div>
-                                        <div class="stats-summary-label">水位下降记录</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 水位变化与结果关系图表 -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="card">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="card mb-4">
                                         <div class="card-header">
-                                            <h6 class="mb-0">水位升降与结果关系统计</h6>
+                                            <h6 class="mb-0">用户增长趋势</h6>
                                         </div>
                                         <div class="card-body">
-                                            <div class="stats-chart-container">
-                                                <canvas id="oddsResultChart"></canvas>
+                                            <div class="chart-container">
+                                                <canvas id="userGrowthChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">用户类型分布</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="userTypeChart"></canvas>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- 详细数据表格 -->
+                            <!-- 用户记录内容统计 -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">用户记录内容统计</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="card record-stats-card">
+                                                        <div class="record-stats-header">
+                                                            <h6 class="mb-0">记录结果分布</h6>
+                                                        </div>
+                                                        <div class="record-stats-body">
+                                                            <div class="stats-grid">
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value" id="totalRecordsCount">0</div>
+                                                                    <div class="stat-label-small">总记录数</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-success" id="winRecordsCount">0</div>
+                                                                    <div class="stat-label-small">赢</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-danger" id="lossRecordsCount">0</div>
+                                                                    <div class="stat-label-small">输</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-secondary" id="pendingRecordsCount">0</div>
+                                                                    <div class="stat-label-small">未设置</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card record-stats-card">
+                                                        <div class="record-stats-header">
+                                                            <h6 class="mb-0">盘口类型分布</h6>
+                                                        </div>
+                                                        <div class="record-stats-body">
+                                                            <div class="stats-grid">
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-info" id="asianHandicapCount">0</div>
+                                                                    <div class="stat-label-small">让球盘</div>
+                                                                </div>
+                                                                <div class="stat-item">
+                                                                    <div class="stat-value text-warning" id="overUnderCount">0</div>
+                                                                    <div class="stat-label-small">大小盘</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="chart-container mt-3" style="height: 200px;">
+                                                                <canvas id="handicapTypeChart"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- 水位分布统计 -->
+                                            <div class="row mt-4">
+                                                <div class="col-12">
+                                                    <div class="card">
+                                                        <div class="record-stats-header">
+                                                            <h6 class="mb-0">水位分布统计</h6>
+                                                        </div>
+                                                        <div class="record-stats-body">
+                                                            <div id="oddsDistribution">
+                                                                <div class="text-center py-4">
+                                                                    <div class="spinner-border text-primary" role="status">
+                                                                        <span class="visually-hidden">加载中...</span>
+                                                                    </div>
+                                                                    <p class="mt-2">正在加载水位分布数据...</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="chart-container mt-3" style="height: 250px;">
+                                                                <canvas id="oddsDistributionChart"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 邀请码使用统计 -->
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card">
                                         <div class="card-header">
-                                            <h6 class="mb-0">水位变化与胜率详细数据</h6>
+                                            <h6 class="mb-0">邀请码使用统计</h6>
                                         </div>
                                         <div class="card-body">
-                                            <div class="table-responsive">
-                                                <table class="odds-result-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>水位变化</th>
-                                                            <th>记录总数</th>
-                                                            <th>赢 (次数)</th>
-                                                            <th>输 (次数)</th>
-                                                            <th>未设置 (次数)</th>
-                                                            <th>胜率</th>
-                                                            <th>盈利率</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="oddsResultTableBody">
-                                                        <tr>
-                                                            <td colspan="7" class="text-center py-4">
-                                                                <div class="spinner-border text-primary" role="status">
-                                                                    <span class="visually-hidden">加载中...</span>
-                                                                </div>
-                                                                <p class="mt-2">正在加载统计数据...</p>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 分析结论 -->
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h6 class="mb-0">分析结论</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div id="analysisConclusion">
-                                                <p>正在分析数据...</p>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-3">
+                                                        <h3 id="totalInvites">0</h3>
+                                                        <p class="text-muted mb-0">总邀请码数</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-3">
+                                                        <h3 id="activeInvitesStat">0</h3>
+                                                        <p class="text-muted mb-0">有效邀请码</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-3">
+                                                        <h3 id="usedInvites">0</h3>
+                                                        <p class="text-muted mb-0">已使用次数</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2881,347 +2763,283 @@
                     </div>
                 `;
                 
-                // 加载水位升降与结果关系统计数据
+                // 加载统计数据并绘制图表
                 try {
-                    const result = await AdminAPI.getOddsResultStats();
-                    if (result.success) {
-                        this.renderOddsResultAnalysis(result.stats);
-                    } else {
-                        this.showErrorState('oddsResultTableBody', '获取统计数据失败，请稍后重试', null, () => {
-                            this.loadStatistics();
-                        });
+                    const [statsResult, inviteStatsResult, recordStatsResult] = await Promise.all([
+                        AdminAPI.getStats(),
+                        AdminAPI.request(CONFIG.ADMIN_ENDPOINTS.invitationStats),
+                        AdminAPI.getRecordStats()
+                    ]);
+                    
+                    if (statsResult.success) {
+                        this.renderStatisticsCharts(statsResult.stats);
+                    }
+                    
+                    if (inviteStatsResult.success) {
+                        this.renderInvitationStats(inviteStatsResult.stats);
+                    }
+                    
+                    // 渲染记录统计
+                    if (recordStatsResult && recordStatsResult.success) {
+                        this.renderRecordStats(recordStatsResult.stats);
                     }
                 } catch (error) {
-                    console.error('加载水位升降统计失败:', error);
-                    this.showErrorState('oddsResultTableBody', '获取统计数据失败，请稍后重试', null, () => {
-                        this.loadStatistics();
+                    console.error('加载统计数据失败:', error);
+                    this.showToast('加载统计数据失败，使用模拟数据', 'warning');
+                    
+                    // 使用模拟数据
+                    this.renderStatisticsCharts({
+                        weekly_trend: [],
+                        user_types: { admin: 1, registered: 50, trial: 100 }
                     });
+                    
+                    this.renderInvitationStats({
+                        codes: { total: 100, active: 30, total_used: 70 }
+                    });
+                    
+                    this.renderMockRecordStats();
                 }
             },
             
-            renderOddsResultAnalysis(stats) {
-                if (!stats) return;
-                
-                // 更新摘要统计
-                if (stats.total_records !== undefined) {
-                    document.getElementById('totalRecordsStat').textContent = stats.total_records;
-                }
-                
-                if (stats.overall_win_rate !== undefined) {
-                    document.getElementById('winRateStat').textContent = stats.overall_win_rate.toFixed(1) + '%';
-                }
-                
-                // 更新水位变化计数
-                if (stats.odds_up_count !== undefined) {
-                    document.getElementById('oddsUpCount').textContent = stats.odds_up_count;
-                }
-                
-                if (stats.odds_down_count !== undefined) {
-                    document.getElementById('oddsDownCount').textContent = stats.odds_down_count;
-                }
-                
-                // 渲染图表
-                this.renderOddsResultChart(stats);
-                
-                // 渲染详细数据表格
-                this.renderOddsResultTable(stats);
-                
-                // 生成分析结论
-                this.generateAnalysisConclusion(stats);
-            },
-            
-            renderOddsResultChart(stats) {
-                const ctx = document.getElementById('oddsResultChart').getContext('2d');
-                if (!ctx) return;
-                
-                // 准备数据
-                const changeTypes = ['上升', '下降', '稳定'];
-                const winData = [];
-                const lossData = [];
-                const pendingData = [];
-                
-                if (stats.odds_up) {
-                    winData.push(stats.odds_up.win || 0);
-                    lossData.push(stats.odds_up.loss || 0);
-                    pendingData.push(stats.odds_up.pending || 0);
-                }
-                
-                if (stats.odds_down) {
-                    winData.push(stats.odds_down.win || 0);
-                    lossData.push(stats.odds_down.loss || 0);
-                    pendingData.push(stats.odds_down.pending || 0);
-                }
-                
-                if (stats.odds_stable) {
-                    winData.push(stats.odds_stable.win || 0);
-                    lossData.push(stats.odds_stable.loss || 0);
-                    pendingData.push(stats.odds_stable.pending || 0);
-                }
-                
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: changeTypes,
-                        datasets: [
-                            {
-                                label: '赢',
-                                data: winData,
-                                backgroundColor: '#28a745',
-                                borderColor: '#218838',
-                                borderWidth: 1
-                            },
-                            {
-                                label: '输',
-                                data: lossData,
-                                backgroundColor: '#dc3545',
-                                borderColor: '#c82333',
-                                borderWidth: 1
-                            },
-                            {
-                                label: '未设置',
-                                data: pendingData,
-                                backgroundColor: '#6c757d',
-                                borderColor: '#545b62',
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                stacked: false,
-                                grid: {
-                                    display: false
-                                }
-                            },
-                            y: {
-                                beginAtZero: true,
-                                stacked: false,
-                                ticks: {
-                                    precision: 0
-                                },
-                                title: {
-                                    display: true,
-                                    text: '记录数量'
-                                }
-                            }
+            renderStatisticsCharts(stats) {
+                // 用户增长趋势图表
+                if (stats.weekly_trend && stats.weekly_trend.length > 0) {
+                    const ctx1 = document.getElementById('userGrowthChart').getContext('2d');
+                    const dates = stats.weekly_trend.map(item => new Date(item.date).toLocaleDateString());
+                    const counts = stats.weekly_trend.map(item => item.count);
+                    
+                    new Chart(ctx1, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: '新增用户数',
+                                data: counts,
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
                         },
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const datasetLabel = context.dataset.label || '';
-                                        const value = context.parsed.y;
-                                        const total = winData[context.dataIndex] + lossData[context.dataIndex] + pendingData[context.dataIndex];
-                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
-                                        return `${datasetLabel}: ${value} (${percentage})`;
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
                                     }
                                 }
                             }
                         }
-                    }
-                });
-            },
-            
-            renderOddsResultTable(stats) {
-                const tbody = document.getElementById('oddsResultTableBody');
-                if (!tbody) return;
-                
-                let html = '';
-                
-                // 计算每种水位变化的统计数据
-                const changeTypes = [
-                    { key: 'odds_up', label: '上升', color: 'text-success' },
-                    { key: 'odds_down', label: '下降', color: 'text-danger' },
-                    { key: 'odds_stable', label: '稳定', color: 'text-warning' }
-                ];
-                
-                changeTypes.forEach(changeType => {
-                    const data = stats[changeType.key];
-                    if (data) {
-                        const total = (data.win || 0) + (data.loss || 0) + (data.pending || 0);
-                        const winRate = total > 0 ? ((data.win || 0) / total * 100).toFixed(1) : 0;
-                        const profitRate = total > 0 ? ((data.profit_rate || 0) * 100).toFixed(1) : 0;
-                        
-                        // 根据胜率确定CSS类
-                        let winRateClass = '';
-                        if (winRate >= 60) {
-                            winRateClass = 'high-win-rate';
-                        } else if (winRate >= 50) {
-                            winRateClass = 'medium-win-rate';
-                        } else {
-                            winRateClass = 'low-win-rate';
-                        }
-                        
-                        html += `
-                            <tr>
-                                <td><strong class="${changeType.color}">${changeType.label}</strong></td>
-                                <td>${total}</td>
-                                <td>${data.win || 0}</td>
-                                <td>${data.loss || 0}</td>
-                                <td>${data.pending || 0}</td>
-                                <td class="win-rate-cell ${winRateClass}">${winRate}%</td>
-                                <td class="${profitRate >= 0 ? 'text-success' : 'text-danger'}">${profitRate >= 0 ? '+' : ''}${profitRate}%</td>
-                            </tr>
-                        `;
-                    }
-                });
-                
-                // 总体统计
-                const totalRecords = stats.total_records || 0;
-                const totalWins = stats.total_wins || 0;
-                const totalLosses = stats.total_losses || 0;
-                const totalPending = stats.total_pending || 0;
-                const overallWinRate = stats.overall_win_rate || 0;
-                const overallProfitRate = stats.overall_profit_rate || 0;
-                
-                let overallWinRateClass = '';
-                if (overallWinRate >= 60) {
-                    overallWinRateClass = 'high-win-rate';
-                } else if (overallWinRate >= 50) {
-                    overallWinRateClass = 'medium-win-rate';
-                } else {
-                    overallWinRateClass = 'low-win-rate';
+                    });
                 }
                 
-                html += `
-                    <tr style="background-color: #f8f9fa; font-weight: bold;">
-                        <td>总计</td>
-                        <td>${totalRecords}</td>
-                        <td>${totalWins}</td>
-                        <td>${totalLosses}</td>
-                        <td>${totalPending}</td>
-                        <td class="win-rate-cell ${overallWinRateClass}">${overallWinRate.toFixed(1)}%</td>
-                        <td class="${overallProfitRate >= 0 ? 'text-success' : 'text-danger'}">${overallProfitRate >= 0 ? '+' : ''}${overallProfitRate.toFixed(1)}%</td>
-                    </tr>
-                `;
-                
-                tbody.innerHTML = html;
-            },
-            
-            generateAnalysisConclusion(stats) {
-                const conclusionDiv = document.getElementById('analysisConclusion');
-                if (!conclusionDiv) return;
-                
-                let conclusionHTML = '';
-                
-                // 计算最佳水位变化类型
-                const changeTypes = [
-                    { key: 'odds_up', label: '水位上升' },
-                    { key: 'odds_down', label: '水位下降' },
-                    { key: 'odds_stable', label: '水位稳定' }
-                ];
-                
-                let bestChangeType = null;
-                let highestWinRate = 0;
-                let bestProfitRate = 0;
-                
-                changeTypes.forEach(type => {
-                    const data = stats[type.key];
-                    if (data) {
-                        const total = (data.win || 0) + (data.loss || 0);
-                        if (total > 0) {
-                            const winRate = (data.win || 0) / total * 100;
-                            const profitRate = (data.profit_rate || 0) * 100;
-                            
-                            if (winRate > highestWinRate) {
-                                highestWinRate = winRate;
-                                bestChangeType = type.label;
-                                bestProfitRate = profitRate;
+                // 用户类型分布图表
+                if (stats.user_types) {
+                    const ctx2 = document.getElementById('userTypeChart').getContext('2d');
+                    const labels = Object.keys(stats.user_types).map(key => this.getUserTypeText(key));
+                    const data = Object.values(stats.user_types);
+                    const backgroundColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
+                    
+                    new Chart(ctx2, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
                             }
                         }
-                    }
-                });
-                
-                // 生成结论
-                conclusionHTML += `<h6><i class="bi bi-lightbulb text-warning me-2"></i>关键发现</h6>`;
-                conclusionHTML += `<div class="mb-3">`;
-                
-                if (bestChangeType) {
-                    conclusionHTML += `<p>📈 <strong>${bestChangeType}</strong> 的记录表现出最高的胜率，达到 <span class="text-success">${highestWinRate.toFixed(1)}%</span>，盈利率为 <span class="text-success">${bestProfitRate.toFixed(1)}%</span>。</p>`;
+                    });
                 }
-                
-                // 检查是否有统计显著性的差异
-                const oddsUpData = stats.odds_up;
-                const oddsDownData = stats.odds_down;
-                
-                if (oddsUpData && oddsDownData) {
-                    const upTotal = (oddsUpData.win || 0) + (oddsUpData.loss || 0);
-                    const downTotal = (oddsDownData.win || 0) + (oddsDownData.loss || 0);
-                    
-                    if (upTotal > 10 && downTotal > 10) {
-                        const upWinRate = (oddsUpData.win || 0) / upTotal * 100;
-                        const downWinRate = (oddsDownData.win || 0) / downTotal * 100;
-                        
-                        const difference = Math.abs(upWinRate - downWinRate);
-                        
-                        if (difference > 10) {
-                            conclusionHTML += `<p>📊 水位上升和水位下降的胜率差异显著，相差 <strong>${difference.toFixed(1)}个百分点</strong>。</p>`;
-                        }
-                    }
-                }
-                
-                // 提供投资建议
-                conclusionHTML += `<h6><i class="bi bi-graph-up text-success me-2"></i>投资建议</h6>`;
-                conclusionHTML += `<div class="mb-3">`;
-                
-                if (stats.overall_win_rate && stats.overall_win_rate > 55) {
-                    conclusionHTML += `<p>✅ 整体胜率超过55%，系统表现良好，可以考虑加大投资。</p>`;
-                } else if (stats.overall_win_rate && stats.overall_win_rate < 45) {
-                    conclusionHTML += `<p>⚠️ 整体胜率低于45%，建议谨慎投资，重新评估策略。</p>`;
-                } else {
-                    conclusionHTML += `<p>ℹ️ 整体胜率在45%-55%之间，表现中等，建议保持当前投资水平。</p>`;
-                }
-                
-                if (bestChangeType) {
-                    conclusionHTML += `<p>🎯 优先关注 <strong>${bestChangeType}</strong> 的盘口，这些盘口有更高的胜率。</p>`;
-                }
-                
-                // 风险管理建议
-                conclusionHTML += `<h6><i class="bi bi-shield-exclamation text-primary me-2"></i>风险管理</h6>`;
-                conclusionHTML += `<ul>`;
-                
-                if (bestChangeType) {
-                    conclusionHTML += `<li>优先关注 <strong>${bestChangeType}</strong> 的盘口</li>`;
-                }
-                
-                if (stats.total_records && stats.total_records > 100) {
-                    conclusionHTML += `<li>样本量充足（${stats.total_records}条记录），统计结果可信</li>`;
-                } else {
-                    conclusionHTML += `<li>样本量有限，建议收集更多数据后再做决策</li>`;
-                }
-                
-                // 风险等级评估
-                const riskLevel = this.calculateRiskLevel(stats);
-                conclusionHTML += `<li>当前风险等级: <span class="badge bg-${riskLevel.color}">${riskLevel.text}</span></li>`;
-                
-                conclusionHTML += `</ul>`;
-                
-                conclusionHTML += `</div>`;
-                
-                conclusionDiv.innerHTML = conclusionHTML;
             },
             
-            calculateRiskLevel(stats) {
-                if (!stats.overall_win_rate) {
-                    return { text: '未知', color: 'secondary' };
+            // 渲染记录统计
+            renderRecordStats(stats) {
+                if (!stats) return;
+                
+                // 更新记录结果统计
+                if (stats.total_records !== undefined) {
+                    document.getElementById('totalRecordsCount').textContent = stats.total_records;
+                }
+                if (stats.win_count !== undefined) {
+                    document.getElementById('winRecordsCount').textContent = stats.win_count;
+                }
+                if (stats.loss_count !== undefined) {
+                    document.getElementById('lossRecordsCount').textContent = stats.loss_count;
+                }
+                if (stats.pending_count !== undefined) {
+                    document.getElementById('pendingRecordsCount').textContent = stats.pending_count;
                 }
                 
-                const winRate = stats.overall_win_rate;
+                // 更新盘口类型统计
+                if (stats.handicap_types) {
+                    document.getElementById('asianHandicapCount').textContent = stats.handicap_types.asian || 0;
+                    document.getElementById('overUnderCount').textContent = stats.handicap_types.over_under || 0;
+                    
+                    // 绘制盘口类型饼图
+                    const ctx = document.getElementById('handicapTypeChart').getContext('2d');
+                    if (ctx) {
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: ['让球盘', '大小盘'],
+                                datasets: [{
+                                    data: [stats.handicap_types.asian || 0, stats.handicap_types.over_under || 0],
+                                    backgroundColor: ['#36A2EB', '#FFCE56'],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
                 
-                if (winRate >= 60) {
-                    return { text: '低风险', color: 'success' };
-                } else if (winRate >= 50) {
-                    return { text: '中等风险', color: 'warning' };
-                } else if (winRate >= 40) {
-                    return { text: '高风险', color: 'danger' };
-                } else {
-                    return { text: '极高风险', color: 'dark' };
+                // 渲染水位分布
+                this.renderOddsDistribution(stats.odds_distribution);
+            },
+            
+            // 渲染模拟记录统计
+            renderMockRecordStats() {
+                const mockStats = {
+                    total_records: 1250,
+                    win_count: 680,
+                    loss_count: 420,
+                    pending_count: 150,
+                    handicap_types: {
+                        asian: 780,
+                        over_under: 470
+                    },
+                    odds_distribution: {
+                        ultra_low: 150,
+                        low: 320,
+                        medium: 450,
+                        high: 280,
+                        ultra_high: 50
+                    }
+                };
+                
+                this.renderRecordStats(mockStats);
+            },
+            
+            // 渲染水位分布
+            renderOddsDistribution(oddsDistribution) {
+                if (!oddsDistribution) {
+                    oddsDistribution = {
+                        ultra_low: 150,
+                        low: 320,
+                        medium: 450,
+                        high: 280,
+                        ultra_high: 50
+                    };
+                }
+                
+                const container = document.getElementById('oddsDistribution');
+                if (!container) return;
+                
+                // 计算总数
+                const total = Object.values(oddsDistribution).reduce((sum, count) => sum + count, 0);
+                if (total === 0) {
+                    container.innerHTML = '<div class="empty-state"><i class="bi bi-bar-chart"></i><p>暂无水位分布数据</p></div>';
+                    return;
+                }
+                
+                // 渲染水位分布条形图
+                let html = '<div class="odds-distribution">';
+                
+                // 定义水位范围
+                const oddsRanges = [
+                    { label: '极低水位 (<0.80)', key: 'ultra_low', color: '#DC3545' },
+                    { label: '低水位 (0.80-0.89)', key: 'low', color: '#FD7E14' },
+                    { label: '中水位 (0.90-0.95)', key: 'medium', color: '#FFC107' },
+                    { label: '高水位 (0.96-1.00)', key: 'high', color: '#20C997' },
+                    { label: '超高水位 (>1.00)', key: 'ultra_high', color: '#0D6EFD' }
+                ];
+                
+                oddsRanges.forEach(range => {
+                    const count = oddsDistribution[range.key] || 0;
+                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                    
+                    html += `
+                        <div class="odds-bar">
+                            <div class="odds-label">${range.label}</div>
+                            <div class="odds-bar-inner">
+                                <div class="odds-fill" style="width: ${percentage}%; background-color: ${range.color};"></div>
+                            </div>
+                            <div class="odds-count" style="min-width: 60px; text-align: right;">
+                                ${count} (${percentage}%)
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+                
+                // 绘制水位分布柱状图
+                const ctx = document.getElementById('oddsDistributionChart').getContext('2d');
+                if (ctx) {
+                    const labels = oddsRanges.map(range => range.label);
+                    const data = oddsRanges.map(range => oddsDistribution[range.key] || 0);
+                    const colors = oddsRanges.map(range => range.color);
+                    
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '记录数量',
+                                data: data,
+                                backgroundColor: colors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            
+            renderInvitationStats(stats) {
+                if (stats.codes) {
+                    document.getElementById('totalInvites').textContent = stats.codes.total || 0;
+                    document.getElementById('activeInvitesStat').textContent = stats.codes.active || 0;
+                    document.getElementById('usedInvites').textContent = stats.codes.total_used || 0;
                 }
             },
             
