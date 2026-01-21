@@ -451,6 +451,34 @@
         .error-state .btn {
             margin-top: 15px;
         }
+        
+        /* 密码强度指示器 */
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 5px;
+            transition: all 0.3s;
+        }
+        
+        .strength-weak {
+            background-color: #dc3545;
+            width: 25%;
+        }
+        
+        .strength-fair {
+            background-color: #ffc107;
+            width: 50%;
+        }
+        
+        .strength-good {
+            background-color: #17a2b8;
+            width: 75%;
+        }
+        
+        .strength-strong {
+            background-color: #28a745;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -1215,49 +1243,7 @@
             
             // 获取水位变化与结果关系统计
             async getOddsResultStats() {
-                try {
-                    const result = await this.request(CONFIG.ADMIN_ENDPOINTS.oddsResultStats);
-                    return result;
-                } catch (error) {
-                    // 如果API不存在，返回模拟数据
-                    console.log('水位变化统计API暂不可用，使用模拟数据');
-                    return {
-                        success: true,
-                        stats: {
-                            total_records: 1250,
-                            total_wins: 680,
-                            total_losses: 420,
-                            total_pending: 150,
-                            overall_win_rate: 54.4,
-                            overall_profit_rate: 8.2,
-                            
-                            odds_up: {
-                                win: 180,
-                                loss: 120,
-                                pending: 30,
-                                profit_rate: 0.12
-                            },
-                            
-                            odds_down: {
-                                win: 250,
-                                loss: 150,
-                                pending: 50,
-                                profit_rate: 0.15
-                            },
-                            
-                            odds_stable: {
-                                win: 250,
-                                loss: 150,
-                                pending: 70,
-                                profit_rate: 0.05
-                            },
-                            
-                            odds_up_count: 330,
-                            odds_down_count: 450,
-                            odds_stable_count: 470
-                        }
-                    };
-                }
+                return this.request(CONFIG.ADMIN_ENDPOINTS.oddsResultStats);
             },
             
             async getLogs(page = 1, limit = 50) {
@@ -1766,6 +1752,7 @@
                                 const updateResult = await AdminAPI.updateUser(userId, updates);
                                 if (updateResult.success) {
                                     AdminUI.showToast('用户信息更新成功', 'success');
+                                    modal.hide();
                                     // 刷新用户列表
                                     const search = document.getElementById('userSearch').value;
                                     const currentPage = 1;
@@ -2471,8 +2458,6 @@
                                             <th>赛事名称</th>
                                             <th>盘口类型</th>
                                             <th>水位变化</th>
-                                            <th>初始水位</th>
-                                            <th>最终水位</th>
                                             <th>推荐</th>
                                             <th>结果</th>
                                             <th>创建时间</th>
@@ -2481,7 +2466,7 @@
                                     </thead>
                                     <tbody id="recordsTableBody">
                                         <tr>
-                                            <td colspan="11" class="text-center py-4">
+                                            <td colspan="9" class="text-center py-4">
                                                 <div class="spinner-border text-primary" role="status">
                                                     <span class="visually-hidden">加载中...</span>
                                                 </div>
@@ -2520,7 +2505,7 @@
                 if (tbody) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="11" class="text-center py-4">
+                            <td colspan="9" class="text-center py-4">
                                 <div class="error-state">
                                     <i class="bi bi-exclamation-triangle"></i>
                                     <p class="mt-2">${errorMessage}</p>
@@ -2545,7 +2530,7 @@
                 if (!records || records.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="11" class="text-center py-4">
+                            <td colspan="9" class="text-center py-4">
                                 <div class="empty-state">
                                     <i class="bi bi-clipboard-data"></i>
                                     <p class="mt-2 text-muted">暂无记录数据</p>
@@ -2584,8 +2569,6 @@
                                 </span>
                             </td>
                             <td>${oddsChangeBadge}</td>
-                            <td>${record.initial_odds !== undefined ? record.initial_odds.toFixed(2) : '-'}</td>
-                            <td>${record.final_odds !== undefined ? record.final_odds.toFixed(2) : '-'}</td>
                             <td>${record.recommendation}</td>
                             <td>
                                 ${record.actual_result === 'win' ? 
@@ -2658,14 +2641,6 @@
                                                 : '<span class="text-muted">无数据</span>'
                                             }
                                         </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">初始水位</label>
-                                        <input type="text" class="form-control" value="${record.initial_odds !== undefined ? record.initial_odds.toFixed(2) : '无数据'}" readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">最终水位</label>
-                                        <input type="text" class="form-control" value="${record.final_odds !== undefined ? record.final_odds.toFixed(2) : '无数据'}" readonly>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">结果</label>
@@ -2912,13 +2887,15 @@
                     if (result.success) {
                         this.renderOddsResultAnalysis(result.stats);
                     } else {
-                        // 使用模拟数据
-                        this.renderMockOddsResultAnalysis();
+                        this.showErrorState('oddsResultTableBody', '获取统计数据失败，请稍后重试', null, () => {
+                            this.loadStatistics();
+                        });
                     }
                 } catch (error) {
                     console.error('加载水位升降统计失败:', error);
-                    // 使用模拟数据
-                    this.renderMockOddsResultAnalysis();
+                    this.showErrorState('oddsResultTableBody', '获取统计数据失败，请稍后重试', null, () => {
+                        this.loadStatistics();
+                    });
                 }
             },
             
@@ -3246,45 +3223,6 @@
                 } else {
                     return { text: '极高风险', color: 'dark' };
                 }
-            },
-            
-            renderMockOddsResultAnalysis() {
-                // 模拟数据
-                const mockStats = {
-                    total_records: 1250,
-                    total_wins: 680,
-                    total_losses: 420,
-                    total_pending: 150,
-                    overall_win_rate: 54.4,
-                    overall_profit_rate: 8.2,
-                    
-                    odds_up: {
-                        win: 180,
-                        loss: 120,
-                        pending: 30,
-                        profit_rate: 0.12
-                    },
-                    
-                    odds_down: {
-                        win: 250,
-                        loss: 150,
-                        pending: 50,
-                        profit_rate: 0.15
-                    },
-                    
-                    odds_stable: {
-                        win: 250,
-                        loss: 150,
-                        pending: 70,
-                        profit_rate: 0.05
-                    },
-                    
-                    odds_up_count: 330,
-                    odds_down_count: 450,
-                    odds_stable_count: 470
-                };
-                
-                this.renderOddsResultAnalysis(mockStats);
             },
             
             async loadSettings() {
