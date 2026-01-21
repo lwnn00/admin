@@ -337,107 +337,28 @@
             padding: 20px 0;
         }
         
-        /* 密码强度指示器 */
-        .password-strength {
-            height: 5px;
-            margin-top: 5px;
-            border-radius: 3px;
-            transition: all 0.3s;
-        }
-        
-        .strength-weak {
-            background-color: #dc3545;
-            width: 25%;
-        }
-        
-        .strength-fair {
-            background-color: #ffc107;
-            width: 50%;
-        }
-        
-        .strength-good {
-            background-color: #28a745;
-            width: 75%;
-        }
-        
-        .strength-strong {
-            background-color: #20c997;
-            width: 100%;
-        }
-        
-        /* 记录统计卡片 */
-        .record-stats-card {
-            height: 100%;
-        }
-        
-        .record-stats-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 15px 20px;
-        }
-        
-        .record-stats-body {
-            padding: 20px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .stat-item {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 1.8rem;
+        /* 水位变化样式 */
+        .odds-change-up {
+            color: #dc3545;
             font-weight: bold;
-            color: var(--primary-color);
         }
         
-        .stat-label-small {
-            font-size: 0.85rem;
+        .odds-change-down {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .odds-change-neutral {
             color: #6c757d;
-            margin-top: 5px;
         }
         
-        /* 水位分布图表样式 */
-        .odds-distribution {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .odds-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .odds-label {
-            min-width: 100px;
-            font-size: 0.9rem;
-        }
-        
-        .odds-bar-inner {
-            flex: 1;
-            height: 24px;
-            background: #e9ecef;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .odds-fill {
-            height: 100%;
-            border-radius: 12px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            transition: width 0.5s ease;
+        .final-odds {
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 4px;
+            display: inline-block;
         }
     </style>
 </head>
@@ -2428,6 +2349,8 @@
                                             <th>赛事名称</th>
                                             <th>盘口类型</th>
                                             <th>推荐</th>
+                                            <th>水位变化</th>
+                                            <th>最后水位</th>
                                             <th>结果</th>
                                             <th>创建时间</th>
                                             <th>操作</th>
@@ -2435,7 +2358,7 @@
                                     </thead>
                                     <tbody id="recordsTableBody">
                                         <tr>
-                                            <td colspan="8" class="text-center py-4">
+                                            <td colspan="10" class="text-center py-4">
                                                 <div class="spinner-border text-primary" role="status">
                                                     <span class="visually-hidden">加载中...</span>
                                                 </div>
@@ -2470,7 +2393,7 @@
                 if (!records || records.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="8" class="text-center py-4">
+                            <td colspan="10" class="text-center py-4">
                                 <i class="bi bi-clipboard-data display-6 text-muted"></i>
                                 <p class="mt-2 text-muted">暂无记录数据</p>
                             </td>
@@ -2479,37 +2402,62 @@
                     return;
                 }
                 
-                tbody.innerHTML = records.map(record => `
-                    <tr>
-                        <td>${record.id}</td>
-                        <td>
-                            <strong>${record.user_name || '未知用户'}</strong>
-                            <br><small class="text-muted">ID: ${record.user_id}</small>
-                        </td>
-                        <td>${record.match_name}</td>
-                        <td>
-                            <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
-                                ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
-                            </span>
-                        </td>
-                        <td>${record.recommendation}</td>
-                        <td>
-                            ${record.actual_result === 'win' ? 
-                                '<span class="badge bg-success">赢</span>' :
-                            record.actual_result === 'loss' ? 
-                                '<span class="badge bg-danger">输</span>' :
-                                '<span class="badge bg-secondary">未设置</span>'
-                            }
-                        </td>
-                        <td>${new Date(record.created_at).toLocaleDateString()}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
-                                    onclick="AdminUI.showRecordDetail(${record.id})">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = records.map(record => {
+                    // 水位变化显示
+                    let oddsChangeHtml = '-';
+                    if (record.odds_change !== undefined && record.odds_change !== null) {
+                        const change = parseFloat(record.odds_change);
+                        if (change > 0) {
+                            oddsChangeHtml = `<span class="odds-change-up"><i class="bi bi-caret-up-fill"></i> 升</span>`;
+                        } else if (change < 0) {
+                            oddsChangeHtml = `<span class="odds-change-down"><i class="bi bi-caret-down-fill"></i> 降</span>`;
+                        } else {
+                            oddsChangeHtml = `<span class="odds-change-neutral">平</span>`;
+                        }
+                    }
+                    
+                    // 最后水位显示
+                    let finalOddsHtml = '-';
+                    if (record.final_odds !== undefined && record.final_odds !== null) {
+                        finalOddsHtml = `<span class="final-odds">${record.final_odds}</span>`;
+                    } else if (record.odds_value !== undefined && record.odds_value !== null) {
+                        finalOddsHtml = `<span class="final-odds">${record.odds_value}</span>`;
+                    }
+                    
+                    return `
+                        <tr>
+                            <td>${record.id}</td>
+                            <td>
+                                <strong>${record.user_name || '未知用户'}</strong>
+                                <br><small class="text-muted">ID: ${record.user_id}</small>
+                            </td>
+                            <td>${record.match_name}</td>
+                            <td>
+                                <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
+                                    ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
+                                </span>
+                            </td>
+                            <td>${record.recommendation}</td>
+                            <td>${oddsChangeHtml}</td>
+                            <td>${finalOddsHtml}</td>
+                            <td>
+                                ${record.actual_result === 'win' ? 
+                                    '<span class="badge bg-success">赢</span>' :
+                                record.actual_result === 'loss' ? 
+                                    '<span class="badge bg-danger">输</span>' :
+                                    '<span class="badge bg-secondary">未设置</span>'
+                                }
+                            </td>
+                            <td>${new Date(record.created_at).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
+                                        onclick="AdminUI.showRecordDetail(${record.id})">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
                 
                 // 渲染分页
                 this.renderPagination('recordsPagination', pagination, (page) => {
