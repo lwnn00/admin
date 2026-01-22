@@ -2778,7 +2778,7 @@ async getRecordStats() {
                 });
             },
             
-            // 修改 loadStatistics 函数中的错误处理
+ // 修改 loadStatistics 函数，确保数据存在
 async loadStatistics() {
     const contentDiv = document.getElementById('statisticsContent');
     contentDiv.innerHTML = `
@@ -2790,90 +2790,93 @@ async loadStatistics() {
                 </button>
             </div>
             <div class="card-body">
+                <!-- 加载指示器 -->
+                <div id="statsLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-2">正在加载统计数据...</p>
+                </div>
+                
                 <!-- 水位变化整体统计 -->
-                <div class="row mb-4">
-                    <div class="col-md-4 mb-3">
-                        <div class="card impact-stat-card">
-                            <div class="card-body text-center">
-                                <div class="impact-value text-success" id="waterUpWinRate">0%</div>
-                                <div class="impact-label">水位上升胜率</div>
-                                <div class="impact-description">
-                                    <small>水位上升时，记录的获胜概率</small>
+                <div id="statsContent" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="card impact-stat-card">
+                                <div class="card-body text-center">
+                                    <div class="impact-value text-success" id="waterUpWinRate">0%</div>
+                                    <div class="impact-label">水位上升胜率</div>
+                                    <div class="impact-description">
+                                        <small>水位上升时，记录的获胜概率</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card impact-stat-card">
+                                <div class="card-body text-center">
+                                    <div class="impact-value text-warning" id="waterDownWinRate">0%</div>
+                                    <div class="impact-label">水位下降胜率</div>
+                                    <div class="impact-description">
+                                        <small>水位下降时，记录的获胜概率</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card impact-stat-card">
+                                <div class="card-body text-center">
+                                    <div class="impact-value text-info" id="waterStableWinRate">0%</div>
+                                    <div class="impact-label">水位稳定胜率</div>
+                                    <div class="impact-description">
+                                        <small>水位稳定时，记录的获胜概率</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card impact-stat-card">
-                            <div class="card-body text-center">
-                                <div class="impact-value text-warning" id="waterDownWinRate">0%</div>
-                                <div class="impact-label">水位下降胜率</div>
-                                <div class="impact-description">
-                                    <small>水位下降时，记录的获胜概率</small>
+                    
+                    <!-- 水位变化范围分析 -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">水位变化对胜率的影响</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="waterImpactChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card impact-stat-card">
-                            <div class="card-body text-center">
-                                <div class="impact-value text-info" id="waterStableWinRate">0%</div>
-                                <div class="impact-label">水位稳定胜率</div>
-                                <div class="impact-description">
-                                    <small>水位稳定时，记录的获胜概率</small>
+                    
+                    <!-- 详细统计数据 -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">详细统计</h6>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 水位变化范围分析 -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h6 class="mb-0">水位变化对胜率的影响</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="waterImpactChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 详细统计数据 -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">详细统计</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-admin">
-                                        <thead>
-                                            <tr>
-                                                <th>水位变化范围</th>
-                                                <th>记录数量</th>
-                                                <th>获胜数量</th>
-                                                <th>胜率</th>
-                                                <th>平均变化</th>
-                                                <th>影响说明</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="waterImpactTableBody">
-                                            <tr>
-                                                <td colspan="6" class="text-center py-4">
-                                                    <div class="spinner-border text-primary" role="status">
-                                                        <span class="visually-hidden">加载中...</span>
-                                                    </div>
-                                                    <p class="mt-2">正在加载水位影响数据...</p>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-admin">
+                                            <thead>
+                                                <tr>
+                                                    <th>水位变化范围</th>
+                                                    <th>记录数量</th>
+                                                    <th>获胜数量</th>
+                                                    <th>胜率</th>
+                                                    <th>平均变化</th>
+                                                    <th>影响说明</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="waterImpactTableBody">
+                                                <!-- 表格内容将通过JS动态加载 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2882,56 +2885,62 @@ async loadStatistics() {
             </div>
         </div>
     `;
-    // 绑定刷新按钮事件
+   // 绑定刷新按钮事件
     document.getElementById('refreshStatsBtn').addEventListener('click', () => {
         this.loadStatistics();
     });
     
-    // 加载水位变化统计
     try {
+        // 显示加载状态
+        const loadingElement = document.getElementById('statsLoading');
+        const contentElement = document.getElementById('statsContent');
+        
+        // 加载水位变化统计
         const result = await AdminAPI.getWaterImpactStats();
+        
+        // 隐藏加载指示器，显示内容
+        if (loadingElement) loadingElement.style.display = 'none';
+        if (contentElement) contentElement.style.display = 'block';
+        
         if (result.success) {
+            console.log('统计数据加载成功:', result.stats);
             this.renderWaterImpactStats(result.stats);
+        } else {
+            throw new Error(result.error || '获取数据失败');
         }
+        
     } catch (error) {
         console.error('加载水位变化统计失败:', error);
+        
+        // 隐藏加载指示器，显示内容
+        const loadingElement = document.getElementById('statsLoading');
+        const contentElement = document.getElementById('statsContent');
+        if (loadingElement) loadingElement.style.display = 'none';
+        if (contentElement) contentElement.style.display = 'block';
+        
         AdminUI.showToast('加载水位变化统计失败', 'danger');
-                    
-                    // 使用模拟数据
-                    const mockStats = {
-                        total_records: 1250,
-                        water_up: {
-                            count: 450,
-                            win_count: 280,
-                            win_rate: 62.2,
-                            avg_water_change: 0.035
-                        },
-                        water_down: {
-                            count: 320,
-                            win_count: 180,
-                            win_rate: 56.3,
-                            avg_water_change: -0.028
-                        },
-                        water_stable: {
-                            count: 480,
-                            win_count: 220,
-                            win_rate: 45.8,
-                            avg_water_change: 0.002
-                        },
-                        win_rates_by_change_range: {
-                            ultra_up: { range: '>+0.10', count: 80, win_rate: 68.8 },
-                            up: { range: '+0.03 to +0.10', count: 220, win_rate: 63.6 },
-                            slight_up: { range: '+0.01 to +0.03', count: 150, win_rate: 58.7 },
-                            stable: { range: '-0.01 to +0.01', count: 480, win_rate: 45.8 },
-                            slight_down: { range: '-0.03 to -0.01', count: 120, win_rate: 51.7 },
-                            down: { range: '-0.10 to -0.03', count: 140, win_rate: 55.0 },
-                            ultra_down: { range: '<-0.10', count: 60, win_rate: 58.3 }
-                        }
-                    };
-                    
-                    this.renderWaterImpactStats(mockStats);
-                }
+        
+        // 使用模拟数据
+        const mockStats = {
+            total_records: 1250,
+            water_change_win_rates: {
+                significant_up: { wins: 120, losses: 80, total: 200, win_rate: 60 },
+                up: { wins: 180, losses: 110, total: 290, win_rate: 62 },
+                stable: { wins: 200, losses: 120, total: 320, win_rate: 63 },
+                down: { wins: 120, losses: 80, total: 200, win_rate: 60 },
+                significant_down: { wins: 60, losses: 30, total: 90, win_rate: 67 }
             },
+            water_level_distribution: [
+                { level: 'low', count: 320, wins: 185, losses: 135, win_rate: 58 },
+                { level: 'medium', count: 450, wins: 280, losses: 170, win_rate: 62 },
+                { level: 'high', count: 280, wins: 154, losses: 126, win_rate: 55 }
+            ]
+        };
+        
+        this.renderWaterImpactStats(mockStats);
+        AdminUI.showToast('已使用模拟数据', 'warning');
+    }
+},
             
 renderWaterImpactStats(stats) {
     // 更新整体胜率
@@ -3065,142 +3074,179 @@ renderWaterImpactTable(stats) {
 // 修改 renderWaterImpactChart 函数
 renderWaterImpactChart(stats) {
     const ctx = document.getElementById('waterImpactChart');
-    if (!ctx) return;
-    
-    // 销毁现有图表
-    if (window.waterImpactChart) {
-        window.waterImpactChart.destroy();
+    if (!ctx) {
+        console.log('图表容器未找到');
+        return;
     }
     
-    // 定义水位变化类型和顺序
-    const changeTypes = [
-        { key: 'significant_up', label: '大幅上升', color: '#28a745' },
-        { key: 'up', label: '小幅上升', color: '#20c997' },
-        { key: 'stable', label: '稳定', color: '#17a2b8' },
-        { key: 'down', label: '小幅下降', color: '#ffc107' },
-        { key: 'significant_down', label: '大幅下降', color: '#fd7e14' }
-    ];
+    try {
+        // 销毁现有图表
+        if (window.waterImpactChart && 
+            typeof window.waterImpactChart.destroy === 'function' &&
+            window.waterImpactChart instanceof Chart) {
+            window.waterImpactChart.destroy();
+            console.log('已销毁现有图表');
+        }
+    } catch (destroyError) {
+        console.log('销毁图表时出错:', destroyError);
+        // 继续创建新图表
+    }
     
-    // 准备数据
-    const labels = changeTypes.map(t => t.label);
-    const winRates = changeTypes.map(t => {
-        const data = stats.water_change_win_rates ? stats.water_change_win_rates[t.key] : null;
-        return data ? data.win_rate : 0;
-    });
-    const counts = changeTypes.map(t => {
-        const data = stats.water_change_win_rates ? stats.water_change_win_rates[t.key] : null;
-        return data ? data.total : 0;
-    });
-    const backgroundColors = changeTypes.map(t => t.color);
-    
-    // 创建图表
-    window.waterImpactChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: '胜率 (%)',
-                    data: winRates,
-                    backgroundColor: backgroundColors,
-                    borderColor: backgroundColors.map(c => c),
-                    borderWidth: 1,
-                    yAxisID: 'y',
-                    order: 1
-                },
-                {
-                    label: '记录数量',
-                    data: counts,
-                    backgroundColor: backgroundColors.map(c => c + '40'), // 半透明
-                    borderColor: backgroundColors.map(c => c),
-                    borderWidth: 1,
-                    type: 'line',
-                    yAxisID: 'y1',
-                    order: 0,
-                    tension: 0.4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    title: {
-                        display: true,
-                        text: '胜率 (%)'
+    try {
+        // 定义水位变化类型和顺序
+        const changeTypes = [
+            { key: 'significant_up', label: '大幅上升', color: '#28a745' },
+            { key: 'up', label: '小幅上升', color: '#20c997' },
+            { key: 'stable', label: '稳定', color: '#17a2b8' },
+            { key: 'down', label: '小幅下降', color: '#ffc107' },
+            { key: 'significant_down', label: '大幅下降', color: '#fd7e14' }
+        ];
+        
+        // 准备数据
+        const labels = changeTypes.map(t => t.label);
+        const winRates = changeTypes.map(t => {
+            const data = stats.water_change_win_rates ? stats.water_change_win_rates[t.key] : null;
+            return data ? data.win_rate : 0;
+        });
+        const counts = changeTypes.map(t => {
+            const data = stats.water_change_win_rates ? stats.water_change_win_rates[t.key] : null;
+            return data ? data.total : 0;
+        });
+        const backgroundColors = changeTypes.map(t => t.color);
+        
+        // 创建图表
+        window.waterImpactChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '胜率 (%)',
+                        data: winRates,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(c => c),
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                        order: 1
                     },
-                    min: 0,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    },
-                    grid: {
-                        drawOnChartArea: true,
-                    },
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    title: {
-                        display: true,
-                        text: '记录数量'
-                    },
-                    min: 0,
-                    grid: {
-                        drawOnChartArea: false,
-                    },
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: '水位变化类型'
+                    {
+                        label: '记录数量',
+                        data: counts,
+                        backgroundColor: backgroundColors.map(c => c + '40'), // 半透明
+                        borderColor: backgroundColors.map(c => c),
+                        borderWidth: 1,
+                        type: 'line',
+                        yAxisID: 'y1',
+                        order: 0,
+                        tension: 0.4
                     }
-                }
+                ]
             },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const datasetLabel = context.dataset.label;
-                            const value = context.parsed.y;
-                            const dataIndex = context.dataIndex;
-                            const changeType = changeTypes[dataIndex];
-                            const winRateData = stats.water_change_win_rates ? stats.water_change_win_rates[changeType.key] : null;
-                            
-                            if (datasetLabel === '胜率 (%)') {
-                                const wins = winRateData ? winRateData.wins : 0;
-                                const losses = winRateData ? winRateData.losses : 0;
-                                const total = winRateData ? winRateData.total : 0;
-                                return [
-                                    `胜率: ${value.toFixed(1)}%`,
-                                    `胜/负: ${wins}/${losses}`,
-                                    `总记录: ${total}`
-                                ];
-                            } else {
-                                return `记录数量: ${value}`;
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '胜率 (%)'
+                        },
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: true,
+                        },
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '记录数量'
+                        },
+                        min: 0,
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '水位变化类型'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const datasetLabel = context.dataset.label;
+                                const value = context.parsed.y;
+                                const dataIndex = context.dataIndex;
+                                const changeType = changeTypes[dataIndex];
+                                const winRateData = stats.water_change_win_rates ? stats.water_change_win_rates[changeType.key] : null;
+                                
+                                if (datasetLabel === '胜率 (%)') {
+                                    const wins = winRateData ? winRateData.wins : 0;
+                                    const losses = winRateData ? winRateData.losses : 0;
+                                    const total = winRateData ? winRateData.total : 0;
+                                    return [
+                                        `胜率: ${value.toFixed(1)}%`,
+                                        `胜/负: ${wins}/${losses}`,
+                                        `总记录: ${total}`
+                                    ];
+                                } else {
+                                    return `记录数量: ${value}`;
+                                }
                             }
                         }
+                    },
+                    legend: {
+                        position: 'top',
                     }
-                },
-                legend: {
-                    position: 'top',
                 }
             }
+        });
+        
+        console.log('图表创建成功');
+        
+    } catch (chartError) {
+        console.error('创建图表失败:', chartError);
+        
+        // 如果图表创建失败，显示错误信息
+        const chartContainer = document.querySelector('.chart-container');
+        if (chartContainer) {
+            chartContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    图表渲染失败: ${chartError.message}
+                </div>
+                <div class="text-center py-4">
+                    <i class="bi bi-bar-chart" style="font-size: 3rem; color: #dc3545;"></i>
+                    <p class="mt-2 text-muted">无法显示图表数据</p>
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="AdminUI.loadStatistics()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> 重试
+                    </button>
+                </div>
+            `;
         }
-    });
+    }
 },
-            async loadSettings() {
+
+async loadSettings() {
                 const contentDiv = document.getElementById('settingsContent');
                 contentDiv.innerHTML = `
                     <div class="card card-admin">
