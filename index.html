@@ -1465,31 +1465,34 @@ async getRecordStats() {
             },
             
             showSection(sectionId) {
-                // 隐藏所有内容区
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                
-                // 移除所有活动的侧边栏链接
-                document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-                    link.classList.remove('active');
-                });
-                
-                // 显示选中的内容区
-                const targetSection = document.getElementById(`${sectionId}Section`);
-                if (targetSection) {
-                    targetSection.style.display = 'block';
-                    
-                    // 激活对应的侧边栏链接
-                    const targetLink = document.querySelector(`[data-section="${sectionId}"]`);
-                    if (targetLink) {
-                        targetLink.classList.add('active');
-                    }
-                    
-                    // 加载对应内容
-                    this.loadSectionContent(sectionId);
-                }
-            },
+    // 清理当前图表（防止内存泄漏和重复渲染问题）
+    this.cleanupCharts();
+    
+    // 隐藏所有内容区
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // 移除所有活动的侧边栏链接
+    document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // 显示选中的内容区
+    const targetSection = document.getElementById(`${sectionId}Section`);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+        
+        // 激活对应的侧边栏链接
+        const targetLink = document.querySelector(`[data-section="${sectionId}"]`);
+        if (targetLink) {
+            targetLink.classList.add('active');
+        }
+        
+        // 加载对应内容
+        this.loadSectionContent(sectionId);
+    }
+},
             
             async loadDashboard() {
                 try {
@@ -3478,7 +3481,22 @@ async loadSettings() {
                 
                 html += '</ul></nav>';
                 container.innerHTML = html;
+            },
+      
+      cleanupCharts: function() {
+        try {
+            if (window.waterImpactChart && 
+                typeof window.waterImpactChart.destroy === 'function' &&
+                window.waterImpactChart instanceof Chart) {
+                window.waterImpactChart.destroy();
+                window.waterImpactChart = null;
+                console.log('已清理水位影响图表');
             }
+        } catch (error) {
+            console.log('清理图表时出错:', error);
+        }
+    }
+    
         };
 
         // ==================== 事件处理 ====================
