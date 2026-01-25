@@ -1382,6 +1382,15 @@ async getRecordStats() {
         };
     }
 },
+            // 删除记录
+    async deleteRecord(recordId) {
+        return this.request(`/api/admin/records/${recordId}`, 'DELETE');
+    },
+    
+    // 批量删除记录
+    async batchDeleteRecords(recordIds) {
+        return this.request('/api/admin/records/batch-delete', 'POST', { recordIds });
+    },
             async getLogs(page = 1, limit = 50) {
                 return this.request(`${CONFIG.ADMIN_ENDPOINTS.logs}?page=${page}&limit=${limit}`);
             },
