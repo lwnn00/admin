@@ -1680,36 +1680,38 @@ async getRecordStats() {
                 return texts[actionType] || texts.default;
             },
             
-            async loadSectionContent(sectionId) {
-                switch(sectionId) {
-                    case 'dashboard':
-                        await this.loadDashboard();
-                        break;
-                    case 'users':
-                        await this.loadUsers();
-                        break;
-                    case 'applications':
-                        await this.loadApplications();
-                        break;
-                    case 'invitations':
-                        await this.loadInvitations();
-                        break;
-                    case 'records':
-                        await this.loadRecords();
-                        break;
-                    case 'logs':
-                        await this.loadLogs();
-                        break;
-                    case 'statistics':
-                        await this.loadStatistics();
-                        break;
-                    case 'settings':
-                        await this.loadSettings();
-                        break;
-                    default:
-                        console.log(`加载 ${sectionId} 内容`);
-                }
-            },
+async loadSectionContent(sectionId) {
+    switch(sectionId) {
+        case 'dashboard':
+            await this.loadDashboard();
+            break;
+        case 'users':
+            await this.loadUsers();
+            break;
+        case 'applications':
+            await this.loadApplications();
+            break;
+        case 'invitations':
+            await this.loadInvitations();
+            break;
+        case 'records':
+            // 先初始化页面事件，再加载数据
+            this.initRecordsPage();
+            await this.loadRecords();
+            break;
+        case 'logs':
+            await this.loadLogs();
+            break;
+        case 'statistics':
+            await this.loadStatistics();
+            break;
+        case 'settings':
+            await this.loadSettings();
+            break;
+        default:
+            console.log(`加载 ${sectionId} 内容`);
+    }
+},
             
             async loadUsers(page = 1, search = '') {
                 const contentDiv = document.getElementById('usersContent');
@@ -2680,8 +2682,13 @@ async getRecordStats() {
     }
 },
             
-           renderRecordsTable(records, pagination) {
+          renderRecordsTable(records, pagination) {
     const tbody = document.getElementById('recordsTableBody');
+    if (!tbody) {
+        console.error('recordsTableBody 元素未找到');
+        return;
+    }
+    
     if (!records || records.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -2691,7 +2698,19 @@ async getRecordStats() {
                 </td>
             </tr>
         `;
+        
+        // 隐藏批量操作工具栏
+        const toolbar = document.querySelector('.batch-action-toolbar');
+        if (toolbar) {
+            toolbar.style.display = 'none';
+        }
         return;
+    }
+    
+    // 显示批量操作工具栏
+    const toolbar = document.querySelector('.batch-action-toolbar');
+    if (toolbar) {
+        toolbar.style.display = 'flex';
     }
     
     tbody.innerHTML = records.map(record => {
@@ -2706,6 +2725,9 @@ async getRecordStats() {
             oddsChangeClass = 'odds-down';
         }
         
+        // 转义比赛名称，防止XSS
+        const matchName = this.escapeHtml(record.match_name || '未知赛事');
+        
         return `
             <tr data-record-id="${record.id}">
                 <td>
@@ -2715,16 +2737,16 @@ async getRecordStats() {
                 </td>
                 <td>${record.id}</td>
                 <td>
-                    <strong>${record.user_name || '未知用户'}</strong>
+                    <strong>${this.escapeHtml(record.user_name || '未知用户')}</strong>
                     <br><small class="text-muted">ID: ${record.user_id}</small>
                 </td>
-                <td>${record.match_name}</td>
+                <td>${matchName}</td>
                 <td>
                     <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
                         ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
                     </span>
                 </td>
-                <td>${record.recommendation}</td>
+                <td>${this.escapeHtml(record.recommendation || '无推荐')}</td>
                 <td>
                     <span class="odds-change ${oddsChangeClass}">
                         <i class="bi ${waterChange > 0 ? 'bi-arrow-up' : waterChange < 0 ? 'bi-arrow-down' : 'bi-dash'} me-1"></i>
@@ -2747,7 +2769,7 @@ async getRecordStats() {
                             <i class="bi bi-eye"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger action-btn" title="删除记录" 
-                                onclick="AdminUI.deleteRecord(${record.id}, '${record.match_name}')">
+                                onclick="AdminUI.deleteRecord(${record.id}, '${matchName.replace(/'/g, "\\'")}')">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -2756,13 +2778,54 @@ async getRecordStats() {
         `;
     }).join('');
     
-    // 添加批量操作工具栏
-    this.addBatchActionToolbar();
+    // 确保批量操作工具栏存在
+    this.ensureBatchActionToolbar();
     
     // 渲染分页
     this.renderPagination('recordsPagination', pagination, (page) => {
         this.loadRecords(page);
     });
+    
+    // 初始化复选框事件
+    this.initCheckboxEvents();
+},
+
+// 确保批量操作工具栏存在
+ensureBatchActionToolbar() {
+    const toolbar = document.querySelector('.batch-action-toolbar');
+    if (!toolbar) {
+        // 延迟添加工具栏，确保DOM已完全渲染
+        setTimeout(() => {
+            this.addBatchActionToolbar();
+        }, 10);
+    } else {
+        // 如果已存在，重新绑定事件
+        this.bindBatchActionEvents();
+    }
+},
+
+// 初始化复选框事件
+initCheckboxEvents() {
+    // 全选/取消全选
+    const selectAllCheckbox = document.getElementById('selectAllRecords');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.record-checkbox');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            this.updateSelectedCount();
+        });
+    }
+    
+    // 更新已选择记录数量
+    this.updateSelectedCount();
+},
+
+// 添加HTML转义函数，防止XSS攻击
+escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 },
             
             async loadLogs(page = 1) {
@@ -3553,90 +3616,118 @@ async loadSettings() {
                 html += '</ul></nav>';
                 container.innerHTML = html;
             },
-      // 添加批量操作工具栏
+    // 修改后的 addBatchActionToolbar 函数
 addBatchActionToolbar() {
     const contentDiv = document.getElementById('recordsContent');
-    const existingToolbar = contentDiv.querySelector('.batch-action-toolbar');
-    
-    if (!existingToolbar) {
-        const toolbar = document.createElement('div');
-        toolbar.className = 'batch-action-toolbar d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded';
-        toolbar.innerHTML = `
-            <div class="d-flex align-items-center">
-                <div class="form-check me-3">
-                    <input class="form-check-input" type="checkbox" id="selectAllRecords">
-                    <label class="form-check-label" for="selectAllRecords">全选</label>
-                </div>
-                <span id="selectedCount" class="text-muted">已选择 0 条记录</span>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-sm btn-danger" id="batchDeleteBtn" disabled>
-                    <i class="bi bi-trash me-1"></i>批量删除
-                </button>
-            </div>
-        `;
-        
-        // 插入到表格之前
-        const cardBody = contentDiv.querySelector('.card-body');
-        const table = cardBody.querySelector('table');
-        cardBody.insertBefore(toolbar, table);
-        
-        // 绑定事件
-        this.bindBatchActionEvents();
+    if (!contentDiv) {
+        console.error('recordsContent 元素未找到');
+        return;
     }
+    
+    // 确保有 .card-body 元素
+    const cardBody = contentDiv.querySelector('.card-body');
+    if (!cardBody) {
+        console.error('.card-body 元素未找到');
+        return;
+    }
+    
+    // 移除现有的工具栏（如果有）
+    const existingToolbar = contentDiv.querySelector('.batch-action-toolbar');
+    if (existingToolbar) {
+        existingToolbar.remove();
+    }
+    
+    // 创建新的工具栏
+    const toolbar = document.createElement('div');
+    toolbar.className = 'batch-action-toolbar d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded';
+    toolbar.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="form-check me-3">
+                <input class="form-check-input" type="checkbox" id="selectAllRecords">
+                <label class="form-check-label" for="selectAllRecords">全选</label>
+            </div>
+            <span id="selectedCount" class="text-muted">已选择 0 条记录</span>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-danger" id="batchDeleteBtn" disabled>
+                <i class="bi bi-trash me-1"></i>批量删除
+            </button>
+        </div>
+    `;
+    
+    // 找到表格元素
+    const table = cardBody.querySelector('table');
+    if (table) {
+        // 在表格之前插入工具栏
+        cardBody.insertBefore(toolbar, table);
+    } else {
+        // 如果没有表格，添加到cardBody的开头
+        cardBody.insertBefore(toolbar, cardBody.firstChild);
+    }
+    
+    // 绑定事件
+    this.bindBatchActionEvents();
 },
 
 // 绑定批量操作事件
 bindBatchActionEvents() {
-    // 全选/取消全选
-    const selectAllCheckbox = document.getElementById('selectAllRecords');
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', (e) => {
-            const checkboxes = document.querySelectorAll('.record-checkbox');
-            checkboxes.forEach(cb => cb.checked = e.target.checked);
-            this.updateSelectedCount();
-        });
-    }
-    
-    // 单个复选框改变时更新计数
-    document.addEventListener('change', (e) => {
-        if (e.target.classList.contains('record-checkbox')) {
-            this.updateSelectedCount();
+    try {
+        // 全选/取消全选
+        const selectAllCheckbox = document.getElementById('selectAllRecords');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const checkboxes = document.querySelectorAll('.record-checkbox');
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                this.updateSelectedCount();
+            });
         }
-    });
-    
-    // 批量删除按钮
-    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
-    if (batchDeleteBtn) {
-        batchDeleteBtn.addEventListener('click', () => {
-            this.batchDeleteRecords();
+        
+        // 单个复选框改变时更新计数
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('record-checkbox')) {
+                this.updateSelectedCount();
+            }
         });
+        
+        // 批量删除按钮
+        const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+        if (batchDeleteBtn) {
+            batchDeleteBtn.addEventListener('click', () => {
+                this.batchDeleteRecords();
+            });
+        }
+    } catch (error) {
+        console.error('绑定批量操作事件失败:', error);
     }
 },
 
 // 更新已选择记录数量
 updateSelectedCount() {
-    const selectedCheckboxes = document.querySelectorAll('.record-checkbox:checked');
-    const count = selectedCheckboxes.length;
-    const countSpan = document.getElementById('selectedCount');
-    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
-    
-    if (countSpan) {
-        countSpan.textContent = `已选择 ${count} 条记录`;
-    }
-    
-    if (batchDeleteBtn) {
-        batchDeleteBtn.disabled = count === 0;
-    }
-    
-    // 更新全选复选框状态
-    const allCheckboxes = document.querySelectorAll('.record-checkbox');
-    const allChecked = allCheckboxes.length > 0 && selectedCheckboxes.length === allCheckboxes.length;
-    const selectAllCheckbox = document.getElementById('selectAllRecords');
-    
-    if (selectAllCheckbox) {
-        selectAllCheckbox.checked = allChecked;
-        selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+    try {
+        const selectedCheckboxes = document.querySelectorAll('.record-checkbox:checked');
+        const count = selectedCheckboxes.length;
+        const countSpan = document.getElementById('selectedCount');
+        const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+        
+        if (countSpan) {
+            countSpan.textContent = `已选择 ${count} 条记录`;
+        }
+        
+        if (batchDeleteBtn) {
+            batchDeleteBtn.disabled = count === 0;
+        }
+        
+        // 更新全选复选框状态
+        const allCheckboxes = document.querySelectorAll('.record-checkbox');
+        const allChecked = allCheckboxes.length > 0 && selectedCheckboxes.length === allCheckboxes.length;
+        const selectAllCheckbox = document.getElementById('selectAllRecords');
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+        }
+    } catch (error) {
+        console.error('更新选择计数失败:', error);
     }
 },
 
