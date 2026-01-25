@@ -461,6 +461,52 @@
             color: #495057;
             margin-top: 8px;
         }
+        /* 批量操作工具栏样式 */
+.batch-action-toolbar {
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.batch-action-toolbar:has(#selectAllRecords:checked) {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+    border-color: #0d6efd;
+}
+
+/* 表格行选中状态 */
+tr:has(.record-checkbox:checked) {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+tr:has(.record-checkbox:checked) td {
+    border-color: rgba(0, 123, 255, 0.2) !important;
+}
+
+/* 复选框样式 */
+.form-check-input.record-checkbox {
+    cursor: pointer;
+}
+
+.form-check-input.record-checkbox:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* 批量操作按钮动画 */
+#batchDeleteBtn:not(:disabled) {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
     </style>
 </head>
 <body>
@@ -2568,140 +2614,156 @@ async getRecordStats() {
             },
             
             async loadRecords(page = 1) {
-                const contentDiv = document.getElementById('recordsContent');
-                contentDiv.innerHTML = `
-                    <div class="card card-admin">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">记录管理</h5>
-                            <div class="d-flex">
-                                <div class="search-box me-2">
-                                    <i class="bi bi-search search-icon"></i>
-                                    <input type="text" class="form-control form-control-sm" id="recordSearch" 
-                                           placeholder="搜索用户ID">
-                                </div>
-                                <button class="btn btn-sm btn-outline-primary" id="refreshRecords">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-admin">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>用户</th>
-                                            <th>赛事名称</th>
-                                            <th>盘口类型</th>
-                                            <th>推荐</th>
-                                            <th>水位变化</th>
-                                            <th>结果</th>
-                                            <th>创建时间</th>
-                                            <th>操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="recordsTableBody">
-                                        <tr>
-                                            <td colspan="9" class="text-center py-4">
-                                                <div class="spinner-border text-primary" role="status">
-                                                    <span class="visually-hidden">加载中...</span>
-                                                </div>
-                                                <p class="mt-2">正在加载记录数据...</p>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="pagination-container" id="recordsPagination"></div>
-                        </div>
+    const contentDiv = document.getElementById('recordsContent');
+    contentDiv.innerHTML = `
+        <div class="card card-admin">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">记录管理</h5>
+                <div class="d-flex">
+                    <div class="search-box me-2">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="form-control form-control-sm" id="recordSearch" 
+                               placeholder="搜索用户ID或比赛名称">
                     </div>
-                `;
-                
-                // 加载记录数据
-                try {
-                    const search = document.getElementById('recordSearch')?.value;
-                    const userId = search ? parseInt(search) : null;
-                    
-                    const result = await AdminAPI.getRecords(page, CONFIG.PAGE_CONFIG.recordsPerPage, userId);
-                    if (result.success) {
-                        this.renderRecordsTable(result.records, result.pagination);
-                    }
-                } catch (error) {
-                    console.error('加载记录失败:', error);
-                    this.showToast('加载记录数据失败', 'danger');
-                }
-            },
+                    <button class="btn btn-sm btn-outline-primary" id="refreshRecords">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 批量操作工具栏将在这里动态添加 -->
+                <div class="table-responsive">
+                    <table class="table table-admin">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>ID</th>
+                                <th>用户</th>
+                                <th>赛事名称</th>
+                                <th>盘口类型</th>
+                                <th>推荐</th>
+                                <th>水位变化</th>
+                                <th>结果</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                            <tr>
+                                <td colspan="10" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                    <p class="mt-2">正在加载记录数据...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-container" id="recordsPagination"></div>
+            </div>
+        </div>
+    `;
+    
+    // 加载记录数据
+    try {
+        const search = document.getElementById('recordSearch')?.value;
+        const userId = search ? parseInt(search) : null;
+        
+        const result = await AdminAPI.getRecords(page, CONFIG.PAGE_CONFIG.recordsPerPage, userId);
+        if (result.success) {
+            this.renderRecordsTable(result.records, result.pagination);
+        }
+    } catch (error) {
+        console.error('加载记录失败:', error);
+        this.showToast('加载记录数据失败', 'danger');
+    }
+},
             
-            renderRecordsTable(records, pagination) {
-                const tbody = document.getElementById('recordsTableBody');
-                if (!records || records.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="9" class="text-center py-4">
-                                <i class="bi bi-clipboard-data display-6 text-muted"></i>
-                                <p class="mt-2 text-muted">暂无记录数据</p>
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                tbody.innerHTML = records.map(record => {
-                    // 计算水位变化
-                    const waterChange = parseFloat(record.water_change) || 0;
-                    let oddsChangeClass = 'odds-neutral';
-                    let oddsChangeText = waterChange === 0 ? '0.00' : waterChange > 0 ? `+${waterChange.toFixed(2)}` : waterChange.toFixed(2);
-                    
-                    if (waterChange > 0.01) {
-                        oddsChangeClass = 'odds-up';
-                    } else if (waterChange < -0.01) {
-                        oddsChangeClass = 'odds-down';
+           renderRecordsTable(records, pagination) {
+    const tbody = document.getElementById('recordsTableBody');
+    if (!records || records.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center py-4">
+                    <i class="bi bi-clipboard-data display-6 text-muted"></i>
+                    <p class="mt-2 text-muted">暂无记录数据</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = records.map(record => {
+        // 计算水位变化
+        const waterChange = parseFloat(record.water_change) || 0;
+        let oddsChangeClass = 'odds-neutral';
+        let oddsChangeText = waterChange === 0 ? '0.00' : waterChange > 0 ? `+${waterChange.toFixed(2)}` : waterChange.toFixed(2);
+        
+        if (waterChange > 0.01) {
+            oddsChangeClass = 'odds-up';
+        } else if (waterChange < -0.01) {
+            oddsChangeClass = 'odds-down';
+        }
+        
+        return `
+            <tr data-record-id="${record.id}">
+                <td>
+                    <div class="form-check">
+                        <input class="form-check-input record-checkbox" type="checkbox" value="${record.id}">
+                    </div>
+                </td>
+                <td>${record.id}</td>
+                <td>
+                    <strong>${record.user_name || '未知用户'}</strong>
+                    <br><small class="text-muted">ID: ${record.user_id}</small>
+                </td>
+                <td>${record.match_name}</td>
+                <td>
+                    <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
+                        ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
+                    </span>
+                </td>
+                <td>${record.recommendation}</td>
+                <td>
+                    <span class="odds-change ${oddsChangeClass}">
+                        <i class="bi ${waterChange > 0 ? 'bi-arrow-up' : waterChange < 0 ? 'bi-arrow-down' : 'bi-dash'} me-1"></i>
+                        ${oddsChangeText}
+                    </span>
+                </td>
+                <td>
+                    ${record.actual_result === 'win' ? 
+                        '<span class="badge bg-success">赢</span>' :
+                    record.actual_result === 'loss' ? 
+                        '<span class="badge bg-danger">输</span>' :
+                        '<span class="badge bg-secondary">未设置</span>'
                     }
-                    
-                    return `
-                        <tr>
-                            <td>${record.id}</td>
-                            <td>
-                                <strong>${record.user_name || '未知用户'}</strong>
-                                <br><small class="text-muted">ID: ${record.user_id}</small>
-                            </td>
-                            <td>${record.match_name}</td>
-                            <td>
-                                <span class="badge ${record.handicap_type === 'asian' ? 'bg-info' : 'bg-warning'}">
-                                    ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
-                                </span>
-                            </td>
-                            <td>${record.recommendation}</td>
-                            <td>
-                                <span class="odds-change ${oddsChangeClass}">
-                                    <i class="bi ${waterChange > 0 ? 'bi-arrow-up' : waterChange < 0 ? 'bi-arrow-down' : 'bi-dash'} me-1"></i>
-                                    ${oddsChangeText}
-                                </span>
-                            </td>
-                            <td>
-                                ${record.actual_result === 'win' ? 
-                                    '<span class="badge bg-success">赢</span>' :
-                                record.actual_result === 'loss' ? 
-                                    '<span class="badge bg-danger">输</span>' :
-                                    '<span class="badge bg-secondary">未设置</span>'
-                                }
-                            </td>
-                            <td>${new Date(record.created_at).toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
-                                        onclick="AdminUI.showRecordDetail(${record.id})">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-                
-                // 渲染分页
-                this.renderPagination('recordsPagination', pagination, (page) => {
-                    this.loadRecords(page);
-                });
-            },
+                </td>
+                <td>${new Date(record.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
+                                onclick="AdminUI.showRecordDetail(${record.id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger action-btn" title="删除记录" 
+                                onclick="AdminUI.deleteRecord(${record.id}, '${record.match_name}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // 添加批量操作工具栏
+    this.addBatchActionToolbar();
+    
+    // 渲染分页
+    this.renderPagination('recordsPagination', pagination, (page) => {
+        this.loadRecords(page);
+    });
+},
             
             async loadLogs(page = 1) {
                 const contentDiv = document.getElementById('logsContent');
@@ -3491,7 +3553,157 @@ async loadSettings() {
                 html += '</ul></nav>';
                 container.innerHTML = html;
             },
-      
+      // 添加批量操作工具栏
+addBatchActionToolbar() {
+    const contentDiv = document.getElementById('recordsContent');
+    const existingToolbar = contentDiv.querySelector('.batch-action-toolbar');
+    
+    if (!existingToolbar) {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'batch-action-toolbar d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded';
+        toolbar.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="form-check me-3">
+                    <input class="form-check-input" type="checkbox" id="selectAllRecords">
+                    <label class="form-check-label" for="selectAllRecords">全选</label>
+                </div>
+                <span id="selectedCount" class="text-muted">已选择 0 条记录</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-danger" id="batchDeleteBtn" disabled>
+                    <i class="bi bi-trash me-1"></i>批量删除
+                </button>
+            </div>
+        `;
+        
+        // 插入到表格之前
+        const cardBody = contentDiv.querySelector('.card-body');
+        const table = cardBody.querySelector('table');
+        cardBody.insertBefore(toolbar, table);
+        
+        // 绑定事件
+        this.bindBatchActionEvents();
+    }
+},
+
+// 绑定批量操作事件
+bindBatchActionEvents() {
+    // 全选/取消全选
+    const selectAllCheckbox = document.getElementById('selectAllRecords');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.record-checkbox');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            this.updateSelectedCount();
+        });
+    }
+    
+    // 单个复选框改变时更新计数
+    document.addEventListener('change', (e) => {
+        if (e.target.classList.contains('record-checkbox')) {
+            this.updateSelectedCount();
+        }
+    });
+    
+    // 批量删除按钮
+    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+    if (batchDeleteBtn) {
+        batchDeleteBtn.addEventListener('click', () => {
+            this.batchDeleteRecords();
+        });
+    }
+},
+
+// 更新已选择记录数量
+updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.record-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    const countSpan = document.getElementById('selectedCount');
+    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+    
+    if (countSpan) {
+        countSpan.textContent = `已选择 ${count} 条记录`;
+    }
+    
+    if (batchDeleteBtn) {
+        batchDeleteBtn.disabled = count === 0;
+    }
+    
+    // 更新全选复选框状态
+    const allCheckboxes = document.querySelectorAll('.record-checkbox');
+    const allChecked = allCheckboxes.length > 0 && selectedCheckboxes.length === allCheckboxes.length;
+    const selectAllCheckbox = document.getElementById('selectAllRecords');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+    }
+},
+
+// 删除单条记录
+async deleteRecord(recordId, recordName = '未知记录') {
+    if (!confirm(`确定要删除记录 "${recordName}" (ID: ${recordId}) 吗？此操作不可撤销。`)) {
+        return;
+    }
+    
+    try {
+        AdminUI.showLoading();
+        const result = await AdminAPI.deleteRecord(recordId);
+        
+        if (result.success) {
+            AdminUI.showToast(`记录 "${recordName}" 已删除`, 'success');
+            
+            // 从表格中移除该行
+            const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+            if (row) {
+                row.remove();
+                this.updateSelectedCount();
+            }
+            
+            // 重新加载记录列表
+            this.loadRecords(1);
+        } else {
+            AdminUI.showToast('删除记录失败: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        AdminUI.showToast('删除记录失败: ' + error.message, 'danger');
+    } finally {
+        AdminUI.hideLoading();
+    }
+},
+
+// 批量删除记录
+async batchDeleteRecords() {
+    const selectedCheckboxes = document.querySelectorAll('.record-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        AdminUI.showToast('请先选择要删除的记录', 'warning');
+        return;
+    }
+    
+    const recordIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    
+    if (!confirm(`确定要删除选中的 ${recordIds.length} 条记录吗？此操作不可撤销。`)) {
+        return;
+    }
+    
+    try {
+        AdminUI.showLoading();
+        const result = await AdminAPI.batchDeleteRecords(recordIds);
+        
+        if (result.success) {
+            AdminUI.showToast(`成功删除 ${result.deleted_records?.length || recordIds.length} 条记录`, 'success');
+            
+            // 重新加载记录列表
+            this.loadRecords(1);
+        } else {
+            AdminUI.showToast('批量删除失败: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        AdminUI.showToast('批量删除失败: ' + error.message, 'danger');
+    } finally {
+        AdminUI.hideLoading();
+    }
+},
       cleanupCharts: function() {
         try {
             if (window.waterImpactChart && 
