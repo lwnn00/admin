@@ -1695,7 +1695,7 @@ async loadSectionContent(sectionId) {
             await this.loadInvitations();
             break;
         case 'records':
-           
+         
             await this.loadRecords();
             break;
         case 'logs':
@@ -2681,7 +2681,7 @@ async loadSectionContent(sectionId) {
     }
 },
             
-          renderRecordsTable(records, pagination) {
+    renderRecordsTable(records, pagination) {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) {
         console.error('recordsTableBody 元素未找到');
@@ -2725,7 +2725,8 @@ async loadSectionContent(sectionId) {
         }
         
         // 转义比赛名称，防止XSS
-        const matchName = this.escapeHtml(record.match_name || '未知赛事');
+        const matchName = record.match_name || '未知赛事';
+        const escapedMatchName = matchName.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         
         return `
             <tr data-record-id="${record.id}">
@@ -2736,7 +2737,7 @@ async loadSectionContent(sectionId) {
                 </td>
                 <td>${record.id}</td>
                 <td>
-                    <strong>${this.escapeHtml(record.user_name || '未知用户')}</strong>
+                    <strong>${record.user_name || '未知用户'}</strong>
                     <br><small class="text-muted">ID: ${record.user_id}</small>
                 </td>
                 <td>${matchName}</td>
@@ -2745,7 +2746,7 @@ async loadSectionContent(sectionId) {
                         ${record.handicap_type === 'asian' ? '让球盘' : '大小盘'}
                     </span>
                 </td>
-                <td>${this.escapeHtml(record.recommendation || '无推荐')}</td>
+                <td>${record.recommendation || '无推荐'}</td>
                 <td>
                     <span class="odds-change ${oddsChangeClass}">
                         <i class="bi ${waterChange > 0 ? 'bi-arrow-up' : waterChange < 0 ? 'bi-arrow-down' : 'bi-dash'} me-1"></i>
@@ -2763,12 +2764,12 @@ async loadSectionContent(sectionId) {
                 <td>${new Date(record.created_at).toLocaleDateString()}</td>
                 <td>
                     <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-primary action-btn" title="查看详情"
-                                onclick="AdminUI.showRecordDetail(${record.id})">
+                        <button class="btn btn-sm btn-outline-primary action-btn view-record-btn" 
+                                title="查看详情" data-record-id="${record.id}">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger action-btn" title="删除记录" 
-                                onclick="AdminUI.deleteRecord(${record.id}, '${matchName.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-sm btn-outline-danger action-btn delete-record-btn" 
+                                title="删除记录" data-record-id="${record.id}" data-record-name="${escapedMatchName}">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -2777,18 +2778,122 @@ async loadSectionContent(sectionId) {
         `;
     }).join('');
     
-    // 确保批量操作工具栏存在
-    this.ensureBatchActionToolbar();
+    // 使用事件委托绑定按钮事件，而不是内联onclick
+    this.bindTableButtonEvents();
+    
+    // 添加批量操作工具栏
+    this.addBatchActionToolbar();
     
     // 渲染分页
     this.renderPagination('recordsPagination', pagination, (page) => {
         this.loadRecords(page);
     });
-    
+
     // 初始化复选框事件
     this.initCheckboxEvents();
 },
+// 绑定表格按钮事件（使用事件委托）
+bindTableButtonEvents() {
+    const tbody = document.getElementById('recordsTableBody');
+    if (!tbody) return;
+    
+    // 查看详情按钮
+    tbody.addEventListener('click', (e) => {
+        const viewBtn = e.target.closest('.view-record-btn');
+        if (viewBtn) {
+            const recordId = viewBtn.dataset.recordId;
+            if (recordId) {
+                this.showRecordDetail(recordId);
+            }
+        }
+        
+        // 删除按钮
+        const deleteBtn = e.target.closest('.delete-record-btn');
+        if (deleteBtn) {
+            const recordId = deleteBtn.dataset.recordId;
+            const recordName = deleteBtn.dataset.recordName;
+            if (recordId) {
+                this.deleteRecord(recordId, recordName);
+            }
+        }
+    });
+},
 
+// 显示记录详情
+async showRecordDetail(recordId) {
+    try {
+        AdminUI.showLoading();
+        
+        // 暂时使用简单的模态框显示
+        const modalContent = document.getElementById('userDetailContent');
+        
+        modalContent.innerHTML = `
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                记录详情功能正在开发中...
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">记录ID</label>
+                        <input type="text" class="form-control" value="${recordId}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <div class="form-control-plaintext">
+                            <span class="badge bg-warning">开发中</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">功能</label>
+                        <div class="form-control-plaintext">记录详情查看</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-control" rows="2" readonly>此功能将显示记录的完整信息，包括比赛详情、水位变化、推荐结果等。</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-warning mt-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                记录详情功能将在下一个版本中上线。
+            </div>
+        `;
+        
+        // 显示模态框
+        const modalElement = document.getElementById('userDetailModal');
+        if (!modalElement) {
+            console.error('userDetailModal 元素未找到');
+            return;
+        }
+        
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        
+        // 更新按钮文本
+        const saveBtn = document.getElementById('saveUserBtn');
+        if (saveBtn) {
+            saveBtn.textContent = '关闭';
+            saveBtn.onclick = function() {
+                modal.hide();
+            };
+        }
+        
+        // 隐藏密码管理选项卡
+        const passwordTab = document.getElementById('passwordTab');
+        if (passwordTab) {
+            passwordTab.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('显示记录详情失败:', error);
+        AdminUI.showToast('显示记录详情失败', 'danger');
+    } finally {
+        AdminUI.hideLoading();
+    }
+},
 // 确保批量操作工具栏存在
 ensureBatchActionToolbar() {
     const toolbar = document.querySelector('.batch-action-toolbar');
@@ -3615,7 +3720,7 @@ async loadSettings() {
                 html += '</ul></nav>';
                 container.innerHTML = html;
             },
-    // 修改后的 addBatchActionToolbar 函数
+    // 添加批量操作工具栏
 addBatchActionToolbar() {
     const contentDiv = document.getElementById('recordsContent');
     if (!contentDiv) {
@@ -3623,51 +3728,59 @@ addBatchActionToolbar() {
         return;
     }
     
-    // 确保有 .card-body 元素
-    const cardBody = contentDiv.querySelector('.card-body');
-    if (!cardBody) {
-        console.error('.card-body 元素未找到');
-        return;
-    }
-    
-    // 移除现有的工具栏（如果有）
-    const existingToolbar = contentDiv.querySelector('.batch-action-toolbar');
-    if (existingToolbar) {
-        existingToolbar.remove();
-    }
-    
-    // 创建新的工具栏
-    const toolbar = document.createElement('div');
-    toolbar.className = 'batch-action-toolbar d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded';
-    toolbar.innerHTML = `
-        <div class="d-flex align-items-center">
-            <div class="form-check me-3">
-                <input class="form-check-input" type="checkbox" id="selectAllRecords">
-                <label class="form-check-label" for="selectAllRecords">全选</label>
+    // 等待DOM完全渲染
+    setTimeout(() => {
+        // 确保有 .card-body 元素
+        const cardBody = contentDiv.querySelector('.card-body');
+        if (!cardBody) {
+            console.error('.card-body 元素未找到');
+            return;
+        }
+        
+        // 移除现有的工具栏（如果有）
+        const existingToolbar = contentDiv.querySelector('.batch-action-toolbar');
+        if (existingToolbar) {
+            existingToolbar.remove();
+        }
+        
+        // 创建新的工具栏
+        const toolbar = document.createElement('div');
+        toolbar.className = 'batch-action-toolbar d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded';
+        toolbar.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="form-check me-3">
+                    <input class="form-check-input" type="checkbox" id="selectAllRecords">
+                    <label class="form-check-label" for="selectAllRecords">全选</label>
+                </div>
+                <span id="selectedCount" class="text-muted">已选择 0 条记录</span>
             </div>
-            <span id="selectedCount" class="text-muted">已选择 0 条记录</span>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-sm btn-danger" id="batchDeleteBtn" disabled>
-                <i class="bi bi-trash me-1"></i>批量删除
-            </button>
-        </div>
-    `;
-    
-    // 找到表格元素
-    const table = cardBody.querySelector('table');
-    if (table) {
-        // 在表格之前插入工具栏
-        cardBody.insertBefore(toolbar, table);
-    } else {
-        // 如果没有表格，添加到cardBody的开头
-        cardBody.insertBefore(toolbar, cardBody.firstChild);
-    }
-    
-    // 绑定事件
-    this.bindBatchActionEvents();
+            <div class="btn-group">
+                <button class="btn btn-sm btn-danger" id="batchDeleteBtn" disabled>
+                    <i class="bi bi-trash me-1"></i>批量删除
+                </button>
+            </div>
+        `;
+        
+        // 找到表格元素
+        const table = cardBody.querySelector('table');
+        if (table) {
+            try {
+                // 在表格之前插入工具栏
+                cardBody.insertBefore(toolbar, table);
+            } catch (error) {
+                console.error('插入工具栏失败:', error);
+                // 备用方案：添加到cardBody的开头
+                cardBody.insertBefore(toolbar, cardBody.firstChild);
+            }
+        } else {
+            // 如果没有表格，添加到cardBody的开头
+            cardBody.insertBefore(toolbar, cardBody.firstChild);
+        }
+        
+        // 绑定事件
+        this.bindBatchActionEvents();
+    }, 100); // 延迟100ms确保DOM完全渲染
 },
-
 // 绑定批量操作事件
 bindBatchActionEvents() {
     try {
