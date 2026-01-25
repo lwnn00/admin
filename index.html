@@ -1695,8 +1695,7 @@ async loadSectionContent(sectionId) {
             await this.loadInvitations();
             break;
         case 'records':
-            // 先初始化页面事件，再加载数据
-            this.initRecordsPage();
+           
             await this.loadRecords();
             break;
         case 'logs':
